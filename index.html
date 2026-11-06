@@ -1910,8 +1910,14 @@ function sortInv(keys){const mm=MSORT[mSortI()][0];if(mm==='base')return keys;if
  const gi=k=>{const g=itemGrade(k);return g?g.i:-1};const f=m===1?(a,b)=>sc(b)-sc(a):m===2?(a,b)=>(gi(b)-gi(a))||(sc(b)-sc(a)):m===3?(a,b)=>rc(b)-rc(a):(a,b)=>((TR_RANK[itm(b).trait]||0)-(TR_RANK[itm(a).trait]||0))||(sc(b)-sc(a));return keys.slice().sort(f)}
 // ===== 거래 (코드 방식) =====
 // 서버가 없는 게임이라 '거래 코드'로 주고받아요: 보내는 쪽에서 아이템이 빠지고 코드가 생기고, 받는 쪽이 코드를 넣으면 들어와요.
-let trTab='send',TSL={},TCOIN=0,trConf=0;
-function openTrade(){FRTO=null;S='trade';trTab='send';TSL={};TCOIN=0;trConf=0;msgT=0}
+let trTab='send',TSL={},TCOIN=0,trConf=0,TSK={},TTAB='item';
+// ✨ 스킬 거래: 장착 안 한 스킬(SV.skills 개수)을 주고받아요 · 합성 스킬은 설계도(sf)도 같이 보내요
+const skOk=q=>!!SKILLS[q]&&!SKILLS[q].adm,skNm=q=>(SKILLS[q]||{}).n||q;
+function skPack(){const s={},sf={};for(const q in TSK){const n=Math.min(TSK[q],(SV.skills||{})[q]|0);if(n>0&&skOk(q)){s[q]=n;if(SV.fus&&SV.fus[q])sf[q]=SV.fus[q]}}return{s,sf}}
+function skTake(s){SV.skills=SV.skills||{};for(const q in s)SV.skills[q]=Math.max(0,(SV.skills[q]|0)-(s[q]|0))}
+function skGiveP(p){const s=p&&p.s||{},sf=p&&p.sf||{};for(const q in sf){SV.fus=SV.fus||{};if(!SV.fus[q]){SV.fus[q]=sf[q];try{fuMakeDef(q)}catch(_){}}}SV.skills=SV.skills||{};for(const q in s){if(!SKILLS[q])continue;SV.skills[q]=(SV.skills[q]|0)+Math.max(0,Math.min(99,s[q]|0))}}
+const skTxt=(p,k)=>{const o=p&&p[k||'s']||{};return Object.keys(o).map(q=>'✨'+skNm(q)+((o[q]|0)>1?' ×'+o[q]:'')).join(', ')};
+function openTrade(){FRTO=null;S='trade';trTab='send';TSL={};TSK={};TCOIN=0;trConf=0;msgT=0}
 const trHash=t=>{let h=2166136261;t+='|boss-arena-trade';for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(36)};
 const eqd=k=>SV.eq===k||Object.values(SV.gear).includes(k);
 const trOk=k=>k!=='fist'&&!!itm(k)&&!itm(k).adm&&!/^★/.test(itm(k).n)&&!PETS[k];
@@ -1919,19 +1925,19 @@ const trOk=k=>k!=='fist'&&!!itm(k)&&!itm(k).adm&&!/^★/.test(itm(k).n)&&!PETS[k
 const isLk=k=>!!(SV.lk&&SV.lk[k]);
 function lkToggle(k){SV.lk=SV.lk||{};const n=(itm(k)||{}).n||'';if(SV.lk[k]){delete SV.lk[k];msg='☆ '+n+' 잠금 해제'}else{SV.lk[k]=1;msg='⭐ '+n+' 잠금 · 판매·분해·거래에서 빠져요'}msgT=1.6;save();snd('click')}
 const trAvail=k=>isLk(k)?0:cntOf(k)-(eqd(k)?1:0);
-function makeTrade(){const ks=Object.keys(TSL);if(!ks.length&&!TCOIN){msg='보낼 아이템이나 코인을 골라 주세요';msgT=1.5;return}
+function makeTrade(){const ks=Object.keys(TSL);if(!ks.length&&!TCOIN&&!Object.keys(TSK).length){msg='보낼 아이템이나 코인을 골라 주세요';msgT=1.5;return}
  if(!infC()&&TCOIN>SV.coin){msg='코인이 부족해요';msgT=1.4;return}
  if(trConf<=0){trConf=2.5;msg='한 번 더 누르면 코드가 만들어지고 아이템이 빠져요';msgT=2.2;snd('warn');return}trConf=0;
- const it={},m={};for(const k of ks){const n=Math.min(TSL[k],trAvail(k));if(n>0){it[k]=n;mDeps(k,m)}}if(!Object.keys(it).length&&!TCOIN){msg='장착 중인 마지막 1개는 못 보내요';msgT=1.6;return};
- const P0={v:1,u:SV.uid,id:Math.random().toString(36).slice(2,10)+Date.now().toString(36),t:Date.now(),i:it,m,c:TCOIN};
- for(const k in it)for(let j=0;j<it[k];j++)rm1(k);if(!infC())SV.coin-=TCOIN;
- const js=JSON.stringify(P0),b=btoa(unescape(encodeURIComponent(js))),code='BA-'+b+'.'+trHash(b);SV.lastTrade=code;SV.cnt.trade=(SV.cnt.trade||0)+1;TSL={};TCOIN=0;save();ST=stat();snd('buy');showCode(code)}
+ const it={},m={};for(const k of ks){const n=Math.min(TSL[k],trAvail(k));if(n>0){it[k]=n;mDeps(k,m)}}const SK=skPack();if(!Object.keys(it).length&&!TCOIN&&!Object.keys(SK.s).length){msg='장착 중인 마지막 1개는 못 보내요';msgT=1.6;return};
+ const P0={v:1,u:SV.uid,id:Math.random().toString(36).slice(2,10)+Date.now().toString(36),t:Date.now(),i:it,m,c:TCOIN,s:SK.s,sf:SK.sf};
+ for(const k in it)for(let j=0;j<it[k];j++)rm1(k);skTake(SK.s);if(!infC())SV.coin-=TCOIN;
+ const js=JSON.stringify(P0),b=btoa(unescape(encodeURIComponent(js))),code='BA-'+b+'.'+trHash(b);SV.lastTrade=code;SV.cnt.trade=(SV.cnt.trade||0)+1;TSL={};TSK={};TCOIN=0;save();ST=stat();snd('buy');showCode(code)}
 async function readTrade(raw){const c=String(raw||'').replace(/\s+/g,'');const m0=/^BA-([A-Za-z0-9+/=]+)\.([0-9a-z]+)$/.exec(c);if(!m0)return'코드 모양이 올바르지 않아요';if(trHash(m0[1])!==m0[2])return'코드가 손상됐거나 바뀌었어요';
  let P0;try{P0=JSON.parse(decodeURIComponent(escape(atob(m0[1]))))}catch(_){return'코드를 읽을 수 없어요'}
  if(!P0||P0.v!==1)return'지원하지 않는 코드예요';if(P0.u===SV.uid)return'내가 만든 코드는 받을 수 없어요';if((SV.tradeIn||[]).includes(P0.id))return'이미 받은 코드예요';if(MKB&&MKB.useCode){try{await MKB.useCode(P0.id)}catch(e){return e&&e.code==='permission-denied'?'이미 누군가 받은 코드예요':'서버에 연결하지 못했어요. 잠시 후 다시 해 주세요'}}
  for(const id in(P0.m||{})){if(!itm(id)){try{const b=mBuild(P0.m[id]);if(b.id!==id)throw 0;(b.cat==='wep'?WEP:GEAR)[id]=b.def}catch(_){return'알 수 없는 합체 아이템이 들어 있어요'}}SV.merged[id]=P0.m[id]}
  const got=[];for(const k in(P0.i||{})){const n=Math.max(0,Math.min(99,P0.i[k]|0));if(!itm(k)||!trOk(k))continue;for(let j=0;j<n;j++)SV.own.push(k);got.push(itm(k).n+(n>1?' ×'+n:''))}
- const cn=Math.max(0,Math.min(1e6,P0.c|0));SV.coin+=cn;SV.tradeIn=(SV.tradeIn||[]).concat(P0.id).slice(-300);save();ST=stat();snd('merge');mfx(W/2,H*.4,50,['#81d4fa','#fff','#ffd54f']);
+ skGiveP(P0);{const sg=skTxt(P0);if(sg)got.push(sg)}const cn=Math.max(0,Math.min(1e6,P0.c|0));SV.coin+=cn;SV.tradeIn=(SV.tradeIn||[]).concat(P0.id).slice(-300);save();ST=stat();snd('merge');mfx(W/2,H*.4,50,['#81d4fa','#fff','#ffd54f']);
  return{ok:1,txt:(got.length?got.join(', '):'')+(cn?(got.length?' + ':'')+cn+' 코인':'')||'빈 선물'}}
 function codeBox(title,val,ro,onOk,okL){if(document.getElementById('pw'))return;const ov=document.createElement('div');ov.id='pw';
  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9;font:700 15px system-ui,-apple-system,sans-serif';
@@ -1973,13 +1979,13 @@ let MKERR='';
 setTimeout(mkInit,300);
 const mkName=p=>p.by===MKID?'나':(p.name||mkNames[p.by]||'누군가');
 const mkAgo=t=>{const m=Math.max(0,Math.floor((Date.now()-t)/60000));return m<1?'방금':m<60?m+'분 전':m<1440?Math.floor(m/60)+'시간 전':Math.floor(m/1440)+'일 전'};
-function mkGive(p){mkReg(p);for(const id in(p.m||{}))SV.merged[id]=p.m[id];for(const k in(p.i||{})){const n=Math.max(0,Math.min(99,p.i[k]|0));if(itm(k)&&trOk(k))for(let j=0;j<n;j++)SV.own.push(k)}SV.coin+=Math.max(0,Math.min(1e6,p.c|0))}
-async function mkPost(){if(!MKB||mkBusy)return;if(MKMODE==='fb'&&!SV.nick){askNick(()=>{mkConf=0});return}const ks=Object.keys(TSL);if(!ks.length&&!TCOIN){msg='올릴 아이템이나 코인을 골라 주세요';msgT=1.5;return}if(!infC()&&TCOIN>SV.coin){msg='코인이 부족해요';msgT=1.4;return}
+function mkGive(p){mkReg(p);for(const id in(p.m||{}))SV.merged[id]=p.m[id];for(const k in(p.i||{})){const n=Math.max(0,Math.min(99,p.i[k]|0));if(itm(k)&&trOk(k))for(let j=0;j<n;j++)SV.own.push(k)}SV.coin+=Math.max(0,Math.min(1e6,p.c|0));skGiveP(p)}
+async function mkPost(){if(!MKB||mkBusy)return;if(MKMODE==='fb'&&!SV.nick){askNick(()=>{mkConf=0});return}const ks=Object.keys(TSL);if(!ks.length&&!TCOIN&&!Object.keys(TSK).length){msg='올릴 아이템이나 코인을 골라 주세요';msgT=1.5;return}if(!infC()&&TCOIN>SV.coin){msg='코인이 부족해요';msgT=1.4;return}
  if(mkConf<=0){mkConf=2.5;trConf=0;msg=TOFR&&MKMODE==='fb'?(TPRICE?'한 번 더 누르면 올라가요 · 제안을 받으면서 '+TPRICE+' 코인에 바로 살 수도 있어요':'한 번 더 누르면 「💬 제안만 받기」로 올라가요 · 마음에 드는 제안을 골라 수락해요'):TPRICE?'한 번 더 누르면 '+TPRICE+' 코인에 거래소에 올라가요 (아이템이 빠져요)':'⚠ 가격이 0이라 「🎁 무료 나눔」으로 올라가요! 아무나 공짜로 가져가요 · 한 번 더 누르면 올려요';msgT=TPRICE||TOFR?2.6:3.5;snd('warn');return}mkConf=0;
- const it={},m={};for(const k of ks){const n=Math.min(TSL[k],trAvail(k));if(n>0){it[k]=n;mDeps(k,m)}}if(!Object.keys(it).length&&!TCOIN){msg='장착 중인 마지막 1개는 못 보내요';msgT=1.6;return};const c=TCOIN,price=TPRICE;
- for(const k in it)for(let j=0;j<it[k];j++)rm1(k);if(!infC())SV.coin-=c;save();ST=stat();mkBusy=true;
- try{await MKB.add(Object.assign({by:MKID,t:Date.now(),i:it,m,c,price,st:'open'},MKMODE==='fb'?{name:String(SV.nick).slice(0,12),ofr:TOFR?1:0}:{}));TSL={};TCOIN=0;TPRICE=0;SV.cnt.trade=(SV.cnt.trade||0)+1;save();snd('buy');msg='📢 거래소에 올렸어요! 🏪 탭에서 볼 수 있어요';msgT=2.4;trTab='market'}
- catch(e){mkGive({i:it,m,c});save();ST=stat();msg=e&&e.code==='quota_exceeded'?'거래소가 꽉 찼어요. 나중에 다시 해 주세요':'올리지 못했어요 (아이템은 돌려받았어요)';msgT=2.2}mkBusy=false}
+ const it={},m={};for(const k of ks){const n=Math.min(TSL[k],trAvail(k));if(n>0){it[k]=n;mDeps(k,m)}}const SK=skPack();if(!Object.keys(it).length&&!TCOIN&&!Object.keys(SK.s).length){msg='장착 중인 마지막 1개는 못 보내요';msgT=1.6;return};const c=TCOIN,price=TPRICE;
+ for(const k in it)for(let j=0;j<it[k];j++)rm1(k);skTake(SK.s);if(!infC())SV.coin-=c;save();ST=stat();mkBusy=true;
+ try{await MKB.add(Object.assign({by:MKID,t:Date.now(),i:it,m,c,price,st:'open',s:SK.s,sf:SK.sf},MKMODE==='fb'?{name:String(SV.nick).slice(0,12),ofr:TOFR?1:0}:{}));TSL={};TSK={};TCOIN=0;TPRICE=0;SV.cnt.trade=(SV.cnt.trade||0)+1;save();snd('buy');msg='📢 거래소에 올렸어요! 🏪 탭에서 볼 수 있어요';msgT=2.4;trTab='market'}
+ catch(e){mkGive({i:it,m,c,s:SK.s,sf:SK.sf});save();ST=stat();msg=e&&e.code==='quota_exceeded'?'거래소가 꽉 찼어요. 나중에 다시 해 주세요':'올리지 못했어요 (아이템은 돌려받았어요)';msgT=2.2}mkBusy=false}
 const MKER={busy:'다른 사람이 처리 중이에요. 잠시 후 다시 눌러 주세요',gone:'이미 없어진 물건이에요',sold:'이미 팔렸어요'};
 async function mkBuy(p){if(!MKB||mkBusy||p.by===MKID)return;if(p.ofr&&!(p.price|0)){ofStart(p);return}const pr=p.price|0;if(!infC()&&SV.coin<pr){msg='코인이 '+(pr-SV.coin)+' 부족해요';msgT=1.5;return}mkBusy=true;
  try{const r=await MKB.claim(p.id,{st:'sold',buyer:MKID,soldAt:Date.now()});if(r.er){msg=MKER[r.er];msgT=1.8}else{if(!infC())SV.coin-=pr;mkGive(r.d);SV.mkGot=(SV.mkGot||[]).concat(p.id).slice(-300);save();ST=stat();snd('merge');mfx(W/2,H*.4,50,['#81d4fa','#fff','#ffd54f']);msg=pr?'🛒 구매 완료! 인벤토리를 확인하세요':'🎁 받았어요! 인벤토리를 확인하세요';msgT=2.2}}
@@ -1995,8 +2001,8 @@ function drawMarket(x0,w){const y0=104;if(mkConf>0)mkConf-=1/60;
  if(MKst==='err'){txt('거래소에 연결할 수 없어요',W/2,y0+90,14,'#ff8a80');return}
  if(!L.length){txt('아직 올라온 물건이 없어요',W/2,y0+90,15,'#99a');txt('「📢 물건 올리기」로 첫 물건을 올려 보세요',W/2,y0+114,12,'#778');return}
  const h=78;L.forEach((p,j)=>{const y=y0+42+j*(h+8),mineP=p.by===MKID,sold=p.st==='sold',ks=Object.keys(p.i||{});ctx.fillStyle=mineP?'rgba(129,212,250,.08)':'rgba(255,255,255,.05)';ctx.strokeStyle=sold?'#ffd84d':mineP?'#81d4fa88':'#345';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x0,y,w,h,12);ctx.fill();ctx.stroke();
-  ks.slice(0,3).forEach((k,q)=>{if(itm(k))itemIcon(k,x0+26+q*30,y+30,.42)});if(!ks.length)txt('💰',x0+26,y+38,22,'#fff');
-  const nm=ks.map(k=>(itm(k)?itm(k).n:'?')+((p.i[k]|0)>1?' ×'+p.i[k]:'')).join(', ')+(p.c?(ks.length?' + ':'')+p.c+' 코인':''),bw=96,tx=x0+14,tw=w-28-bw-8;
+  ks.slice(0,3).forEach((k,q)=>{if(itm(k))itemIcon(k,x0+26+q*30,y+30,.42)});if(!ks.length)txt(Object.keys(p.s||{}).length?'✨':'💰',x0+26,y+38,22,'#fff');
+  const nm=ks.map(k=>(itm(k)?itm(k).n:'?')+((p.i[k]|0)>1?' ×'+p.i[k]:'')).join(', ')+(p.c?(ks.length?' + ':'')+p.c+' 코인':'')+(skTxt(p)?(ks.length||p.c?' + ':'')+skTxt(p):''),bw=96,tx=x0+14,tw=w-28-bw-8;
   txt(nm||'빈 물건',tx,y+62-4,13,'#eef','left',tw);txt('👤 '+mkName(p)+' · '+mkAgo(p.t),tx+Math.min(3,ks.length)*30+(ks.length?4:30),y+34,11,'#99a','left',tw-Math.min(3,ks.length)*30-30);
   const pr=p.price|0,bx=x0+w-bw-10,by=y+(h-40)/2;
   const ofo=p.ofr&&MKMODE==='fb';
@@ -2215,13 +2221,13 @@ async function rkLoad(){if(!ONL()||rkBusy)return;rkBusy=true;try{const C=MK.coll
 // 📮 우편함
 function mailStart(){if(!ONL())return;mailUnsub&&mailUnsub();mailUnsub=MK.collection('mail').doc(MKID).collection('box').orderBy('t','desc').limit(50).onSnapshot(sn=>{MAIL=sn.docs.map(d=>Object.assign({id:d.id},d.data())).filter(d=>!(SV.blk||{})[d.from]);MAIL.forEach(mkReg);try{frMail()}catch(e){}},e=>console.error(e))}
 let FRTO=null,mlBusy=false; // 친구 목록에서 고른 받는 사람
-async function mailSend(){if(!ONL()||mlBusy)return;const ks=Object.keys(TSL);if(!ks.length&&!TCOIN){msg='보낼 아이템이나 코인을 골라 주세요';msgT=1.5;return}if(!infC()&&TCOIN>SV.coin){msg='코인이 부족해요';msgT=1.4;return}
+async function mailSend(){if(!ONL()||mlBusy)return;const ks=Object.keys(TSL);if(!ks.length&&!TCOIN&&!Object.keys(TSK).length){msg='보낼 아이템이나 코인을 골라 주세요';msgT=1.5;return}if(!infC()&&TCOIN>SV.coin){msg='코인이 부족해요';msgT=1.4;return}
  const go=async v=>{const n=String(v).trim(),key=n.toLowerCase().replace(/[^0-9a-z가-힣_]/g,'');if(!key)return'닉네임을 적어 주세요';
   let to;try{const g=await MK.collection('names').doc(key).get();if(!g.exists)return'그런 닉네임이 없어요';to=g.data().uid}catch(e){return'서버에 연결하지 못했어요'}if(to===MKID)return'나에게는 보낼 수 없어요';
-  const it={},m={};for(const k of Object.keys(TSL)){const q=Math.min(TSL[k],trAvail(k));if(q>0){it[k]=q;mDeps(k,m)}}if(!Object.keys(it).length&&!TCOIN)return'장착 중인 마지막 1개는 못 보내요';const c=TCOIN;
-  for(const k in it)for(let j=0;j<it[k];j++)rm1(k);if(!infC())SV.coin-=c;save();ST=stat();
-  try{await MK.collection('mail').doc(to).collection('box').add({from:MKID,fromName:SV.nick||'누군가',t:Date.now(),i:it,m,c})}catch(e){console.error(e);mkGive({i:it,m,c});save();ST=stat();return'보내지 못했어요 (아이템은 돌려받았어요)'}
-  TSL={};TCOIN=0;SV.lastTo=n;SV.cnt.trade=(SV.cnt.trade||0)+1;save();snd('buy');return{ok:1,msg:'📮 '+n+'에게 보냈어요!'}};
+  const it={},m={};for(const k of Object.keys(TSL)){const q=Math.min(TSL[k],trAvail(k));if(q>0){it[k]=q;mDeps(k,m)}}const SK=skPack();if(!Object.keys(it).length&&!TCOIN&&!Object.keys(SK.s).length)return'장착 중인 마지막 1개는 못 보내요';const c=TCOIN;
+  for(const k in it)for(let j=0;j<it[k];j++)rm1(k);skTake(SK.s);if(!infC())SV.coin-=c;save();ST=stat();
+  try{await MK.collection('mail').doc(to).collection('box').add({from:MKID,fromName:SV.nick||'누군가',t:Date.now(),i:it,m,c,s:SK.s,sf:SK.sf})}catch(e){console.error(e);mkGive({i:it,m,c,s:SK.s,sf:SK.sf});save();ST=stat();return'보내지 못했어요 (아이템은 돌려받았어요)'}
+  TSL={};TSK={};TCOIN=0;SV.lastTo=n;SV.cnt.trade=(SV.cnt.trade||0)+1;save();snd('buy');return{ok:1,msg:'📮 '+n+'에게 보냈어요!'}};
  if(FRTO){mlBusy=true;let r;try{r=await go(FRTO.n)}finally{mlBusy=false}if(r&&r.ok)FRTO=null;msg=typeof r==='string'?r:(r&&r.msg)||'';msgT=2;return}
  codeBox('📮 받는 사람 닉네임',SV.lastTo||'',false,go,'보내기')}
 async function mailTake(p){if(onBusy)return;onBusy=true;try{const fs=MK,ref=fs.collection('mail').doc(MKID).collection('box').doc(p.id);const r=await fs.runTransaction(async tx=>{const g=await tx.get(ref);if(!g.exists)return null;tx.delete(ref);return g.data()});if(r){mkGive(r);save();ST=stat();snd('coin');msg='📮 받았어요!';msgT=1.4}}catch(e){console.error(e);msg='받지 못했어요';msgT=1.5}onBusy=false}
@@ -2246,8 +2252,8 @@ function drawOnline(){txt('🌐 온라인',W/2,40,24,'#80deea');btn('← 뒤로'
  if(onTab==='mail'){txt('📮 받은 우편 '+MAIL.length+'개',x0+4,y0+18,14,'#e0f7fa','left',w-130);if(MAIL.length)btn('모두 받기',x0+w-110,y0,110,30,mailTakeAll,'#ffd84d',13);
   txt('보낼 때는 🤝 거래 → 보내기 → 「📮 닉네임으로 바로 보내기」',W/2,y0+48,11,'#889','center',w);
   if(!MAIL.length){txt('우편함이 비어 있어요',W/2,y0+100,14,'#99a');foot();return}
-  const h=64;MAIL.forEach((p,j)=>{const y=y0+62+j*(h+8),ks=Object.keys(p.i||{});ctx.fillStyle='rgba(255,255,255,.05)';ctx.strokeStyle='#80deea66';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x0,y,w,h,12);ctx.fill();ctx.stroke();ks.slice(0,3).forEach((k,q)=>{if(itm(k))itemIcon(k,x0+24+q*28,y+22,.38)});if(!ks.length)txt('💰',x0+24,y+30,20,'#fff');
-   const nm=ks.map(k=>(itm(k)?itm(k).n:'?')+((p.i[k]|0)>1?' ×'+p.i[k]:'')).join(', ')+(p.c?(ks.length?' + ':'')+p.c+' 코인':'');txt(nm||'빈 우편',x0+14,y+h-12,13,'#eef','left',w-130);txt('✉ '+(p.fromName||'누군가')+' · '+mkAgo(p.t),x0+24+Math.min(3,ks.length)*28+8,y+26,11,'#99a','left',w-200);btn('받기',x0+w-92,y+(h-36)/2,80,36,()=>mailTake(p),'#80deea',14)});foot();return}
+  const h=64;MAIL.forEach((p,j)=>{const y=y0+62+j*(h+8),ks=Object.keys(p.i||{});ctx.fillStyle='rgba(255,255,255,.05)';ctx.strokeStyle='#80deea66';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x0,y,w,h,12);ctx.fill();ctx.stroke();ks.slice(0,3).forEach((k,q)=>{if(itm(k))itemIcon(k,x0+24+q*28,y+22,.38)});if(!ks.length)txt(Object.keys(p.s||{}).length?'✨':'💰',x0+24,y+30,20,'#fff');
+   const nm=ks.map(k=>(itm(k)?itm(k).n:'?')+((p.i[k]|0)>1?' ×'+p.i[k]:'')).join(', ')+(p.c?(ks.length?' + ':'')+p.c+' 코인':'')+(skTxt(p)?(ks.length||p.c?' + ':'')+skTxt(p):'');txt(nm||'빈 우편',x0+14,y+h-12,13,'#eef','left',w-130);txt('✉ '+(p.fromName||'누군가')+' · '+mkAgo(p.t),x0+24+Math.min(3,ks.length)*28+8,y+26,11,'#99a','left',w-200);btn('받기',x0+w-92,y+(h-36)/2,80,36,()=>mailTake(p),'#80deea',14)});foot();return}
  if(onTab==='chat'){nickRow();btn('✏ 메시지 쓰기',x0,H-92,w-100,40,chatWrite,'#80deea',15);btn('🚩 신고',x0+w-92,H-92,92,40,()=>reportPlayer(''),'#ff8a80',14);const top=y0+40,bot=H-100,lh=40,n=Math.max(1,Math.floor((bot-top)/lh)),L=CHAT.filter(c=>!blk()[c.by]).slice(-n);{const bn=Object.keys(blk()).length;btn('🙈 차단 '+bn,x0+w-92,y0+4,92,30,blockListUI,'#ffb74d',12)}if(!L.length)txt('아직 대화가 없어요. 첫 메시지를 남겨 보세요!',W/2,top+60,13,'#99a','center',w);
   L.forEach((c,j)=>{const y=top+j*lh,me=c.by===MKID;if(!me)btns.push({x:x0,y,w,h:lh-2,fn:()=>chatMenu(c)});txt((me?'나':filterBad(String(c.name||'누군가')))+' · '+mkAgo(c.t),me?x0+w-6:x0+6,y+13,10,me?'#80deea':'#99a',me?'right':'left',w-12);txt(filterBad(String(c.txt||'')),me?x0+w-6:x0+6,y+31,14,'#eef',me?'right':'left',w-12)});foot();return}
 }
@@ -4300,7 +4306,7 @@ function drawTrade(){txt('🤝 거래',W/2,40,24,'#81d4fa');btn('← 뒤로',16,
   if(msgT>0){ctx.globalAlpha=Math.min(1,msgT*2);txt(msg,W/2,H-16,14,'#ffe082','center',W-24);ctx.globalAlpha=1}return}
  // 보내기
  const sel=Object.keys(TSL),nSel=sel.reduce((a,k)=>a+TSL[k],0),py=102,mkOn=!!MK,ph=mkOn?(MKMODE==='fb'?226:184):118;if(mkConf>0)mkConf-=1/60;ctx.fillStyle='rgba(255,255,255,.05)';ctx.beginPath();ctx.roundRect(x0,py,w,ph,14);ctx.fill();
- txt('보낼 것: 아이템 '+nSel+'개'+(TCOIN?' + '+TCOIN+' 코인':''),x0+14,py+24,14,'#e1f5fe','left',w-130);if(nSel||TCOIN)btn('↺ 비우기',x0+w-82,py+8,72,26,()=>{TSL={};TCOIN=0;trConf=0},'#81d4fa',12);
+ const nSk=Object.values(TSK).reduce((a,b)=>a+b,0);txt('보낼 것: 아이템 '+nSel+'개'+(nSk?' + 스킬 '+nSk+'개':'')+(TCOIN?' + '+TCOIN+' 코인':''),x0+14,py+24,14,'#e1f5fe','left',w-130);if(nSel||TCOIN||nSk)btn('↺ 비우기',x0+w-82,py+8,72,26,()=>{TSL={};TSK={};TCOIN=0;trConf=0},'#81d4fa',12);
  {const bw=Math.min(54,(w-28-100)/4),bx=x0+14;[[-100,'-100'],[-10,'-10'],[10,'+10'],[100,'+100']].forEach(([d,l],i)=>{const xx=bx+(i<2?i*(bw+6):100+i*(bw+6));btn(l,xx,py+38,bw,30,()=>{TCOIN=Math.max(0,Math.min(infC()?1e6:SV.coin,TCOIN+d));trConf=0},d>0?'#ffd84d':'#9ab',12)});txt('💰 '+TCOIN,bx+2*(bw+6)+50-3,py+59,15,'#ffd84d')}
  if(mkOn){const bw=Math.min(54,(w-28-100)/4),bx=x0+14;txt('🏪 거래소 판매 가격',bx,py+84,11,'#99a','left');[[-100,'-100'],[-10,'-10'],[10,'+10'],[100,'+100']].forEach(([d,l],i)=>{const xx=bx+(i<2?i*(bw+6):100+i*(bw+6));btn(l,xx,py+92,bw,30,()=>{TPRICE=Math.max(0,Math.min(99990,TPRICE+d));mkConf=0},d>0?'#81d4fa':'#9ab',12)});txt(TPRICE?'🏷 '+TPRICE:TOFR&&MKMODE==='fb'?'제안만':'무료',bx+2*(bw+6)+50-3,py+113,15,'#81d4fa');
   if(OFFTO){btns=btns.filter(b=>!(b.y>=py+70&&b.y<py+130));ctx.fillStyle='rgba(20,18,30,.96)';ctx.beginPath();ctx.roundRect(x0+6,py+72,w-12,56,10);ctx.fill();txt('💬 「'+OFFTO.lb+'」에 제안하기',x0+16,py+94,14,'#ffd54f','left',w-70);txt('위에서 코인, 아래에서 아이템을 골라요 · 수락되면 바로 교환',x0+16,py+116,11,'#cfd8dc','left',w-70);btn('✕',x0+w-50,py+80,38,38,()=>{OFFTO=null;mkConf=0},'#9ab',14);
@@ -4308,12 +4314,17 @@ function drawTrade(){txt('🤝 거래',W/2,40,24,'#81d4fa');btn('← 뒤로',16,
   else{if(MKMODE==='fb')btn(TOFR?'💬 제안 받기 ON':'💬 제안 받기 OFF',x0+w-14-132,py+70,132,20,()=>{TOFR=!TOFR;mkConf=0;msg=TOFR?'💬 다른 사람이 원하는 걸 제안하고, 내가 골라 수락해요 (가격을 정하면 바로 사기도 돼요)':'제안 받기를 껐어요';msgT=2.6},TOFR?'#ffd54f':'#778',11);
   btn(mkConf>0?'⚠ 한 번 더 누르면 올려요':'🏪 거래소에 올리기',x0+14,py+136,(w-36)/2,36,mkPost,mkConf>0?'#ff8a80':'#ffd84d',14)}}
  if(mkOn)btn(trConf>0?'⚠ 한 번 더 누르면 만들어요':'📤 거래 코드 만들기',x0+22+(w-36)/2,py+136,(w-36)/2,36,makeTrade,trConf>0?'#ff8a80':'#81d4fa',14);else btn(trConf>0?'⚠ 정말 보낼까요? (한 번 더)':'📤 거래 코드 만들기',x0+14,py+76,w-28-(SV.lastTrade?110:0),34,makeTrade,trConf>0?'#ff8a80':'#81d4fa',14);if(SV.lastTrade&&!mkOn)btn('마지막 코드',x0+w-118,py+76,104,34,()=>showCode(SV.lastTrade),'#9ab',12);if(MKMODE==='fb'){if(FRTO){btn('📮 '+FRTO.n+'에게 보내기 (우편함)',x0+14,py+180,w-28-40,34,mailSend,'#80deea',14);btn('✕',x0+w-14-34,py+180,34,34,()=>{FRTO=null},'#9ab',14)}else btn('📮 닉네임으로 바로 보내기 (우편함)',x0+14,py+180,w-28,34,mailSend,'#80deea',14)}
- const L=[...new Set(SV.own)].filter(trOk),gy=py+ph+28;txt('아이템을 눌러 담기 (다시 누르면 빼기) · ★ 보상 아이템과 펫은 못 보내요',W/2,gy-10,11,'#889','center',w);
+ const L=[...new Set(SV.own)].filter(trOk),gy=py+ph+28+40;{const tw2=(w-8)/2;[['item','🎒 아이템'],['skill','✨ 스킬']].forEach(([k,l],i)=>{const x=x0+i*(tw2+8),on=TTAB===k;btn(l+(k==='skill'&&nSk?' ('+nSk+')':k==='item'&&nSel?' ('+nSel+')':''),x,py+ph+8,tw2,32,()=>{TTAB=k},on?'#ffd54f':'#667',13)})}
+ if(TTAB==='skill'){txt('스킬을 눌러 담기 (다시 누르면 빼기) · 무기에 바른 스킬은 떼어야 보낼 수 있어요',W/2,gy-10,11,'#889','center',w);const Q=Object.keys(SV.skills||{}).filter(q=>(SV.skills[q]|0)>0&&skOk(q));if(!Q.length)txt('보낼 수 있는 스킬이 없어요',W/2,gy+40,14,'#889');
+  const T=Math.min(84,(w-3*8)/4),cols=Math.max(4,Math.floor((w+8)/(T+8)));Q.forEach((q,i)=>{const sk=SKILLS[q],x=x0+(i%cols)*(T+8),y=gy+Math.floor(i/cols)*(T+22),av=SV.skills[q]|0,n=TSK[q]||0,on=n>0;
+   btns.push({x,y,w:T,h:T,fn:()=>{if(n<av){TSK[q]=n+1;snd('pop')}else delete TSK[q];trConf=0;mkConf=0}});ctx.fillStyle=on?'rgba(255,213,79,.18)':'rgba(255,255,255,.06)';ctx.strokeStyle=on?'#ffd54f':'#ffd54f44';ctx.lineWidth=on?3:1.5;ctx.beginPath();ctx.roundRect(x,y,T,T,12);ctx.fill();ctx.stroke();txt(sk.ic||'✨',x+T/2,y+T/2+12,Math.min(34,T*.42),'#fff');
+   if(av>1)txt('×'+av,x+7,y+16,11,'#fff','left');if(on){ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(x+T-11,y+11,10,0,TAU);ctx.fill();txt(String(n),x+T-11,y+15,11,'#111')}txt(sk.n,x+T/2,y+T+14,11,'#ffe082','center',T+6)})}
+ else{txt('아이템을 눌러 담기 (다시 누르면 빼기) · ★ 보상 아이템과 펫은 못 보내요',W/2,gy-10,11,'#889','center',w);
  if(!L.length){txt('보낼 수 있는 아이템이 없어요',W/2,gy+40,14,'#889');}
  const T=Math.min(84,(w-3*8)/4),cols=Math.max(4,Math.floor((w+8)/(T+8)));L.forEach((k,i)=>{const it=itm(k),x=x0+(i%cols)*(T+8),y=gy+Math.floor(i/cols)*(T+22),av=trAvail(k),n=TSL[k]||0,on=n>0;
   btns.push({x,y,w:T,h:T,fn:()=>{if(av<=0){msg=isLk(k)?'⭐ 잠근 아이템은 못 보내요 (인벤토리에서 별을 눌러 해제)':'장착 중인 마지막 1개는 못 보내요';msgT=1.4;return}if(n<av){TSL[k]=n+1;snd('pop')}else{delete TSL[k]}trConf=0}});
   ctx.globalAlpha=av<=0?.4:1;ctx.fillStyle=on?it.c+'33':'rgba(255,255,255,.06)';ctx.strokeStyle=on?it.c:it.c+'55';ctx.lineWidth=on?3:1.5;ctx.beginPath();ctx.roundRect(x,y,T,T,12);ctx.fill();ctx.stroke();itemIcon(k,x+T/2,y+T/2,Math.min(.7,T/110));
-  if(cntOf(k)>1)txt('×'+cntOf(k),x+7,y+16,11,'#fff','left');if(on){ctx.fillStyle=it.c;ctx.beginPath();ctx.arc(x+T-11,y+11,10,0,TAU);ctx.fill();txt(String(n),x+T-11,y+15,11,'#111')}txt(it.n,x+T/2,y+T+14,11,it.c,'center',T+6);if(isLk(k))txt('⭐',x+T-12,y+T-8,12,'#ffd54f');ctx.globalAlpha=1});
+  if(cntOf(k)>1)txt('×'+cntOf(k),x+7,y+16,11,'#fff','left');if(on){ctx.fillStyle=it.c;ctx.beginPath();ctx.arc(x+T-11,y+11,10,0,TAU);ctx.fill();txt(String(n),x+T-11,y+15,11,'#111')}txt(it.n,x+T/2,y+T+14,11,it.c,'center',T+6);if(isLk(k))txt('⭐',x+T-12,y+T-8,12,'#ffd54f');ctx.globalAlpha=1})}
  if(msgT>0){ctx.globalAlpha=Math.min(1,msgT*2);ctx.fillStyle='rgba(0,0,0,.75)';ctx.beginPath();ctx.roundRect(W/2-Math.min(200,W/2-8),H-38,Math.min(400,W-16),28,14);ctx.fill();txt(msg,W/2,H-19,13,'#ffe082','center',W-28);ctx.globalAlpha=1}}
 function drawEquip(){txt('인벤토리',W/2,44,24,'#b07cff');btn('← 뒤로',16,8,96,40,()=>{S='title'},'#9ab');coinUI();
 const land=W>H*1.2,dw=land?Math.min(420,W*.42):W-32,dx=16,dy=64,dh=land?H-dy-12:Math.min(470,H*.48),cx=dx+dw/2,sc=Math.min(1.25,(dh-80)/250);
@@ -6076,7 +6087,7 @@ const MEMESK={
 for(const q in MEMESK){const M=MEMESK[q];SKILLS[q]={ic:M.ic,n:M.n,t:'all',cd:M.cd,d:M.d,src:'🎁 배포 스킬',dist:1};SK2[q]={d:M.d,f:M.f};if(!SKK.includes(q))SKK.push(q)}
 const DISTK=()=>[...Object.keys(MEMESK).map(q=>'s:'+q),...Object.keys(WEP).filter(k=>WEP[k].dist),...Object.keys(GEAR).filter(k=>GEAR[k].dist)];
 // 우편으로 스킬도 받을 수 있게
-{const _mg=mkGive;mkGive=function(p){_mg(p);for(const q in(p.s||{})){if(!SKILLS[q])continue;const n=Math.max(0,Math.min(99,p.s[q]|0));SV.skills=SV.skills||{};SV.skills[q]=(SV.skills[q]||0)+n}}}
+/* 스킬 받기는 mkGive 안의 skGiveP 가 처리 */
 async function distSendAll(k){if(!ONL()){msg='온라인(파이어베이스)에 연결돼야 보낼 수 있어요';msgT=1.8;return}const isS=k.startsWith('s:'),id=isS?k.slice(2):k,nm=isS?SKILLS[id].n:itm(id).n;if(!confirm('모든 플레이어 우편함으로 「'+nm+'」을(를) 1개씩 보낼까요?'))return;
  try{const sn=await MK.collection('names').get();let n=0;msg='📮 보내는 중…';msgT=3;for(const d of sn.docs){const u=d.data().uid;if(!u||BANS[u])continue;await MK.collection('mail').doc(u).collection('box').add({from:MKID,fromName:'👑 관리자 · 🎁 배포',t:Date.now(),i:isS?{}:{[id]:1},s:isS?{[id]:1}:{},m:{},c:0});n++}msg='🎁 '+n+'명에게 「'+nm+'」 보냈어요';msgT=2}catch(e){console.error(e);msg='보내지 못했어요';msgT=1.8}}
 let admDistAll=false,SHSD=1;
@@ -6238,25 +6249,25 @@ try{if(sessionStorage.getItem('srvWiped')){sessionStorage.removeItem('srvWiped')
 // ===== 💬 거래소 제안(오퍼) 거래 =====
 let TOFR=false,OFFTO=null,OFIN=[],OFOUT=[],ofSub1=null,ofSub2=null,ofBusy=false,ofSeenN=-1,ofLastT=0;
 const OFC=()=>MK.collection('offers');
-function ofItemsTxt(o,pre){const i=o[(pre||'')+'i']||{},c=o[(pre||'')+'c']|0,ks=Object.keys(i);mkReg({m:o[(pre||'')+'m']||{}});const t=ks.map(k=>(itm(k)?itm(k).n:'?')+((i[k]|0)>1?' ×'+i[k]:'')).join(', ');return (t+(c?(t?' + ':'')+c+' 코인':''))||'(빈 제안)'}
+function ofItemsTxt(o,pre){const i=o[(pre||'')+'i']||{},c=o[(pre||'')+'c']|0,ks=Object.keys(i);mkReg({m:o[(pre||'')+'m']||{}});const t=ks.map(k=>(itm(k)?itm(k).n:'?')+((i[k]|0)>1?' ×'+i[k]:'')).join(', ');const st=skTxt(o,(pre||'')+'s');return (t+(c?(t?' + ':'')+c+' 코인':'')+(st?(t||c?' + ':'')+st:''))||'(빈 제안)'}
 function ofLabel(p){return ofItemsTxt(p).slice(0,26)}
-function ofStart(p){if(MKMODE!=='fb')return;if(!SV.nick){askNick(()=>{});return}OFFTO={id:p.id,by:p.by,lb:ofLabel(p)};TSL={};TCOIN=0;mkConf=0;trTab='send';msg='💬 제안할 아이템·코인을 고르고 「💬 제안 보내기」를 눌러요';msgT=2.6}
+function ofStart(p){if(MKMODE!=='fb')return;if(!SV.nick){askNick(()=>{});return}OFFTO={id:p.id,by:p.by,lb:ofLabel(p)};TSL={};TSK={};TCOIN=0;mkConf=0;trTab='send';msg='💬 제안할 아이템·코인을 고르고 「💬 제안 보내기」를 눌러요';msgT=2.6}
 function ofWatch(){if(MKMODE!=='fb'||!MKID||ofSub1)return;try{ofSub1=OFC().where('owner','==',MKID).onSnapshot(sn=>{OFIN=sn.docs.map(d=>Object.assign({id:d.id},d.data()));const n=OFIN.filter(o=>o.st==='open').length;if(ofSeenN>=0&&n>ofSeenN){msg='💬 내 물건에 새 제안이 왔어요! 🤝 거래 → 🏪 거래소';msgT=3;try{snd('coin')}catch(_){}}ofSeenN=n},e=>console.error('ofIn',e));
   ofSub2=OFC().where('by','==',MKID).onSnapshot(sn=>{OFOUT=sn.docs.map(d=>Object.assign({id:d.id},d.data()));ofResolveAll()},e=>console.error('ofOut',e))}catch(e){console.error(e)}}
-async function ofSend(){if(!OFFTO||mkBusy)return;if(!SV.nick){askNick(()=>{});return}const ks=Object.keys(TSL);if(!ks.length&&!TCOIN){msg='제안할 아이템이나 코인을 골라 주세요';msgT=1.6;return}if(!infC()&&TCOIN>SV.coin){msg='코인이 부족해요';msgT=1.4;return}
+async function ofSend(){if(!OFFTO||mkBusy)return;if(!SV.nick){askNick(()=>{});return}const ks=Object.keys(TSL);if(!ks.length&&!TCOIN&&!Object.keys(TSK).length){msg='제안할 아이템이나 코인을 골라 주세요';msgT=1.6;return}if(!infC()&&TCOIN>SV.coin){msg='코인이 부족해요';msgT=1.4;return}
  if(OFOUT.some(o=>o.mid===OFFTO.id&&o.st==='open')){msg='이 물건엔 이미 제안했어요 · 거래소의 「📨 내 제안」에서 취소하고 다시 보내요';msgT=2.6;return}
  if(mkConf<=0){mkConf=2.5;msg='한 번 더 누르면 제안을 보내요 (고른 것들은 맡겨지고, 거절·취소되면 돌려받아요)';msgT=2.6;snd('warn');return}mkConf=0;
- const it={},m={};for(const k of ks){const n=Math.min(TSL[k],trAvail(k));if(n>0){it[k]=n;mDeps(k,m)}}if(!Object.keys(it).length&&!TCOIN){msg='장착 중인 마지막 1개는 못 보내요';msgT=1.6;return}const c=TCOIN,to=OFFTO;
- for(const k in it)for(let j=0;j<it[k];j++)rm1(k);if(!infC())SV.coin-=c;saveNow();ST=stat();mkBusy=true;
- try{await OFC().add({mid:to.id,owner:to.by,by:MKID,name:String(SV.nick).slice(0,12),lb:to.lb,i:it,m,c,t:Date.now(),st:'open'});TSL={};TCOIN=0;OFFTO=null;trTab='market';snd('buy');msg='💬 제안을 보냈어요! 상대가 수락하면 바로 거래돼요';msgT=2.6}
- catch(e){console.error(e);mkGive({i:it,m,c});saveNow();ST=stat();msg='제안을 못 보냈어요 ('+(e&&e.code||'오류')+') · 아이템은 돌려받았어요';msgT=2.6}mkBusy=false}
+ const it={},m={};for(const k of ks){const n=Math.min(TSL[k],trAvail(k));if(n>0){it[k]=n;mDeps(k,m)}}const SK=skPack();if(!Object.keys(it).length&&!TCOIN&&!Object.keys(SK.s).length){msg='장착 중인 마지막 1개는 못 보내요';msgT=1.6;return}const c=TCOIN,to=OFFTO;
+ for(const k in it)for(let j=0;j<it[k];j++)rm1(k);skTake(SK.s);if(!infC())SV.coin-=c;saveNow();ST=stat();mkBusy=true;
+ try{await OFC().add({mid:to.id,owner:to.by,by:MKID,name:String(SV.nick).slice(0,12),lb:to.lb,i:it,m,c,s:SK.s,sf:SK.sf,t:Date.now(),st:'open'});TSL={};TSK={};TCOIN=0;OFFTO=null;trTab='market';snd('buy');msg='💬 제안을 보냈어요! 상대가 수락하면 바로 거래돼요';msgT=2.6}
+ catch(e){console.error(e);mkGive({i:it,m,c,s:SK.s,sf:SK.sf});saveNow();ST=stat();msg='제안을 못 보냈어요 ('+(e&&e.code||'오류')+') · 아이템은 돌려받았어요';msgT=2.6}mkBusy=false}
 // 내가 보낸 제안 정리: 수락 → 물건 받기 · 거절/물건 사라짐 → 맡긴 것 돌려받기
 async function ofResolve(o,withdraw){if(!SV.ofDone)SV.ofDone=[];if(SV.ofDone.includes(o.id)){OFC().doc(o.id).delete().catch(()=>{});return}
  const r=await MK.runTransaction(async tx=>{const orf=OFC().doc(o.id),og=await tx.get(orf);if(!og.exists)return{k:'none'};const d=og.data();if(d.st==='acc'){tx.delete(orf);return{k:'acc',d}}if(d.st==='rej'){tx.delete(orf);return{k:'back',d}}
   const mg=await tx.get(MK.collection('market').doc(d.mid));if(withdraw||!mg.exists||mg.data().st!=='open'){tx.delete(orf);return{k:withdraw?'wd':'back',d}}return{k:'wait'}});
  if(r.k==='none'||r.k==='wait')return r.k;const d=r.d;SV.ofDone=SV.ofDone.concat(o.id).slice(-300);
- if(r.k==='acc'){mkGive({i:d.gi||{},m:d.gm||{},c:d.gc|0});msg='🤝 「'+(d.lb||'물건')+'」 제안이 수락됐어요! 받은 물건을 인벤토리에서 확인하세요';msgT=3.2;try{snd('fanfare');mfx(W/2,H*.4,60,['#ffd54f','#fff','#81d4fa'])}catch(_){}SV.cnt.trade=(SV.cnt.trade||0)+1}
- else{mkGive({i:d.i||{},m:d.m||{},c:d.c|0});msg=r.k==='wd'?'제안을 취소했어요 · 맡긴 것을 돌려받았어요':'💬 「'+(d.lb||'물건')+'」 제안이 '+(d.st==='rej'?'거절됐어요':'끝났어요 (물건이 팔리거나 내려감)')+' · 맡긴 것을 돌려받았어요';msgT=3}
+ if(r.k==='acc'){mkGive({i:d.gi||{},m:d.gm||{},c:d.gc|0,s:d.gs||{},sf:d.gsf||{}});msg='🤝 「'+(d.lb||'물건')+'」 제안이 수락됐어요! 받은 물건을 인벤토리에서 확인하세요';msgT=3.2;try{snd('fanfare');mfx(W/2,H*.4,60,['#ffd54f','#fff','#81d4fa'])}catch(_){}SV.cnt.trade=(SV.cnt.trade||0)+1}
+ else{mkGive({i:d.i||{},m:d.m||{},c:d.c|0,s:d.s||{},sf:d.sf||{}});msg=r.k==='wd'?'제안을 취소했어요 · 맡긴 것을 돌려받았어요':'💬 「'+(d.lb||'물건')+'」 제안이 '+(d.st==='rej'?'거절됐어요':'끝났어요 (물건이 팔리거나 내려감)')+' · 맡긴 것을 돌려받았어요';msgT=3}
  saveNow();ST=stat();return r.k}
 async function ofResolveAll(){if(ofBusy||!MK)return;ofBusy=true;try{for(const o of OFOUT.slice()){if(o.st==='open'&&!(MKst==='ok'&&!MKL.some(p=>p.id===o.mid&&p.st==='open')))continue;try{await ofResolve(o)}catch(e){console.error(e)}}}finally{ofBusy=false}}
 setInterval(()=>{try{if(MKMODE==='fb'&&MK){if(!ofSub1&&MKID)ofWatch();if(Date.now()-ofLastT>6000){ofLastT=Date.now();ofResolveAll();ofOwnerClean()}}}catch(_){}},1500);
@@ -6264,8 +6275,8 @@ setInterval(()=>{try{if(MKMODE==='fb'&&MK){if(!ofSub1&&MKID)ofWatch();if(Date.no
 async function ofOwnerClean(){if(MKst!=='ok')return;for(const o of OFIN)if(o.st==='open'&&!MKL.some(p=>p.id===o.mid&&p.st==='open')){try{await OFC().doc(o.id).update({st:'rej'})}catch(_){}}}
 async function ofRejectAll(mid,except){for(const o of OFIN)if(o.mid===mid&&o.st==='open'&&o.id!==except){try{await OFC().doc(o.id).update({st:'rej'})}catch(_){}}}
 async function ofAccept(o){if(mkBusy)return;mkBusy=true;try{if(!SV.ofGot)SV.ofGot=[];
- const r=await MK.runTransaction(async tx=>{const orf=OFC().doc(o.id),mr=MK.collection('market').doc(o.mid),og=await tx.get(orf),mg=await tx.get(mr);if(!og.exists||og.data().st!=='open')return{er:'이 제안은 이미 취소됐어요'};if(!mg.exists||mg.data().st!=='open')return{er:'이미 팔렸거나 내린 물건이에요'};if(mg.data().by!==MKID)return{er:'내 물건이 아니에요'};const d=mg.data();tx.update(orf,{st:'acc',gi:d.i||{},gm:d.m||{},gc:d.c|0,at:Date.now()});tx.delete(mr);return{o:og.data()}});
- if(r.er){msg=r.er;msgT=2.2}else{if(!SV.ofGot.includes(o.id)){mkGive({i:r.o.i||{},m:r.o.m||{},c:r.o.c|0});SV.ofGot=SV.ofGot.concat(o.id).slice(-300);SV.cnt.trade=(SV.cnt.trade||0)+1}saveNow();ST=stat();msg='🤝 거래 성사! '+(r.o.name||'상대')+'의 제안을 받았어요 · 인벤토리를 확인하세요';msgT=3;try{snd('fanfare');mfx(W/2,H*.4,60,['#ffd54f','#fff','#7fffb2'])}catch(_){}ofRejectAll(o.mid,o.id);tabOvClose()}}
+ const r=await MK.runTransaction(async tx=>{const orf=OFC().doc(o.id),mr=MK.collection('market').doc(o.mid),og=await tx.get(orf),mg=await tx.get(mr);if(!og.exists||og.data().st!=='open')return{er:'이 제안은 이미 취소됐어요'};if(!mg.exists||mg.data().st!=='open')return{er:'이미 팔렸거나 내린 물건이에요'};if(mg.data().by!==MKID)return{er:'내 물건이 아니에요'};const d=mg.data();tx.update(orf,{st:'acc',gi:d.i||{},gm:d.m||{},gc:d.c|0,gs:d.s||{},gsf:d.sf||{},at:Date.now()});tx.delete(mr);return{o:og.data()}});
+ if(r.er){msg=r.er;msgT=2.2}else{if(!SV.ofGot.includes(o.id)){mkGive({i:r.o.i||{},m:r.o.m||{},c:r.o.c|0,s:r.o.s||{},sf:r.o.sf||{}});SV.ofGot=SV.ofGot.concat(o.id).slice(-300);SV.cnt.trade=(SV.cnt.trade||0)+1}saveNow();ST=stat();msg='🤝 거래 성사! '+(r.o.name||'상대')+'의 제안을 받았어요 · 인벤토리를 확인하세요';msgT=3;try{snd('fanfare');mfx(W/2,H*.4,60,['#ffd54f','#fff','#7fffb2'])}catch(_){}ofRejectAll(o.mid,o.id);tabOvClose()}}
  catch(e){console.error(e);msg='거래하지 못했어요 ('+(e&&e.code||'오류')+')';msgT=2.4}mkBusy=false}
 async function ofReject(o){try{await OFC().doc(o.id).update({st:'rej'});msg='제안을 거절했어요 (상대는 맡긴 걸 돌려받아요)';msgT=2}catch(e){msg='거절 실패 ('+(e&&e.code||'오류')+')';msgT=2}}
 // DOM 패널
