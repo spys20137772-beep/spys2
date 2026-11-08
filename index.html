@@ -510,7 +510,7 @@ function fxText0(g){return [].concat(g.dbl||[]).map(o=>oreName(o)+' 획득 2배'
 function drawMerge(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#10302e');g.addColorStop(1,'#071413');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 for(let i=0;i<18;i++){const a=tm*.3+i*TAU/18;ctx.strokeStyle='rgba(128,203,196,.05)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(W/2,H*.45,90+i*22+Math.sin(tm+i)*4,a,a+.8);ctx.stroke()}
 txt('🔗 합체',W/2,40,24,'#80cbc4');btn('← 뒤로',16,8,96,40,()=>{S='title';MSL=[]},'#9ab');coinUI();
-if(!['make','rcm'].includes(mTab))mTab='make';const TBS=[['make','🔗 합체하기'],['rcm','⭐ 추천 무기']],tw=Math.min(W-32,560),tbw=(tw-8)/2,tx0=(W-tw)/2;TBS.forEach(([k,l],i)=>{const x=tx0+i*(tbw+8),on=mTab===k;btns.push({x,y:58,w:tbw,h:34,fn:()=>{mTab=k;msgT=0}});ctx.fillStyle=on?'rgba(128,203,196,.25)':'rgba(255,255,255,.05)';ctx.strokeStyle=on?'#80cbc4':'#355';ctx.lineWidth=on?2.5:1.5;ctx.beginPath();ctx.roundRect(x,58,tbw,34,10);ctx.fill();ctx.stroke();txt(l,x+tbw/2,81,14,on?'#e0f2f1':'#9bb')});
+const TBS=[['make','🔗 합체하기'],['rec','📜 합체 도감'],['rcm','⭐ 추천 무기']],tw=Math.min(W-32,560),tbw=(tw-16)/3,tx0=(W-tw)/2;TBS.forEach(([k,l],i)=>{const x=tx0+i*(tbw+8),on=mTab===k;btns.push({x,y:58,w:tbw,h:34,fn:()=>{mTab=k;msgT=0}});ctx.fillStyle=on?'rgba(128,203,196,.25)':'rgba(255,255,255,.05)';ctx.strokeStyle=on?'#80cbc4':'#355';ctx.lineWidth=on?2.5:1.5;ctx.beginPath();ctx.roundRect(x,58,tbw,34,10);ctx.fill();ctx.stroke();txt(l,x+tbw/2,81,14,on?'#e0f2f1':'#9bb')});
 const y0=102,land=W>H*1.2;
 if(mTab==='make'){if(mConf>0)mConf-=1/60;const lw=land?(W-48)*.5:W-32,lx=16,rx=land?lx+lw+16:16,rw=land?W-rx-16:W-32,ph=land?H-y0-14:400;
  ctx.fillStyle='rgba(255,255,255,.04)';ctx.beginPath();ctx.roundRect(lx,y0,lw,ph,16);ctx.fill();
@@ -534,7 +534,12 @@ if(mTab==='make'){if(mConf>0)mConf-=1/60;const lw=land?(W-48)*.5:W-32,lx=16,rx=l
  const cols=Math.max(3,Math.floor((rw+8)/94)),T=(rw-(cols-1)*8)/cols;L.forEach((k,i)=>{const it=itm(k),x=rx+(i%cols)*(T+8),y=fy+38+Math.floor(i/cols)*(T+8),inS=MSL.includes(k);const us=MSL.filter(z=>z===k).length,hv=cntOf(k);btns.push({x,y,w:T,h:T,fn:()=>{if(us<hv&&mIsEq(k)&&us+1>=hv){const nw=performance.now();if(!(MEQW===k&&nw-MEQT<2500)){MEQW=k;MEQT=nw;msg='⚠ 지금 장착 중이에요 · 한 번 더 누르면 넣어요 (합체하면 사라져요)';msgT=2;snd('hurt');return}MEQW=null}if(MSK.length){if(us<hv&&MSL.length<2)MSL.push(k);else if(us)MSL.splice(MSL.lastIndexOf(k),1);else{msg='장비는 2개까지예요 · 칸을 눌러 빼 주세요';msgT=1.3;return}mConf=0;snd('pop');return}if(us<hv&&MSL.length<3){MSL.push(k);mConf=0;snd('pop');return}if(us){MSL=MSL.filter(z=>z!==k);mConf=0;snd('pop');return}msg='3개까지 넣을 수 있어요';msgT=1.2}});
   ctx.fillStyle=inS?it.c+'33':'rgba(255,255,255,.06)';ctx.strokeStyle=inS?it.c:it.c+'66';ctx.lineWidth=inS?3:1.5;ctx.beginPath();ctx.roundRect(x,y,T,T,12);ctx.fill();ctx.stroke();itemIcon(k,x+T/2,y+T*.42,Math.min(.7,T/110));ctx.font='800 11px system-ui';let nm=it.n;while(nm.length>2&&ctx.measureText(nm).width>T-8)nm=nm.slice(0,-1);if(nm!==it.n)nm=nm.slice(0,-1)+'…';txt(nm,x+T/2,y+T-9,11,inS?'#fff':it.c);if(inS){ctx.fillStyle=it.c;ctx.beginPath();ctx.arc(x+T-11,y+11,8,0,TAU);ctx.fill();txt(String(us),x+T-11,y+15,11,'#111')}if(hv>1)txt('×'+hv,x+8,y+17,11,'#fff','left');if(mIsEq(k)){ctx.fillStyle='#ffb300';ctx.beginPath();ctx.roundRect(x+4,y+T-40,44,15,7);ctx.fill();txt('장착중',x+26,y+T-29,10,'#111')}})}}
 else if(mTab==='rcm'){drawMRcm(y0)}
-else{return}
+else{const R=mRecipes(),found=Object.keys(SV.mlog).length;txt('발견한 합체 '+found+' / '+R.length,W/2-60,y0+12,13,'#b2dfdb');{const on=mOnly;btns.push({x:W/2+50,y:y0,w:130,h:22,fn:()=>{mOnly=!mOnly;mPage=0}});ctx.strokeStyle=on?'#80cbc4':'#577';ctx.lineWidth=2;ctx.fillStyle=on?'rgba(128,203,196,.3)':'transparent';ctx.beginPath();ctx.roundRect(W/2+52,y0+3,15,15,4);ctx.fill();ctx.stroke();if(on)txt('✔',W/2+59,y0+15,11,'#fff');txt('발견한 것만',W/2+74,y0+15,12,on?'#e0f2f1':'#8aa','left')}
+ const list=mOnly?R.filter(k=>SV.mlog[k]):R,cw=Math.min(W-32,900),x0=(W-cw)/2,cols=Math.max(2,Math.floor((cw+8)/170)),iw=(cw-(cols-1)*8)/cols,ih=50,rows=Math.max(1,Math.floor((H-y0-26-52)/(ih+8))),per=rows*cols,tot=Math.max(1,Math.ceil(list.length/per));mPage=Math.min(mPage,tot-1);
+ if(!list.length)txt('아직 발견한 합체가 없어요',W/2,y0+80,14,'#5f8f8a');
+ list.slice(mPage*per,(mPage+1)*per).forEach((k,i)=>{const parts=k.split('+'),kn=SV.mlog[k],x=x0+(i%cols)*(iw+8),y=y0+26+Math.floor(i/cols)*(ih+8),isW=!!WEP[parts[0]];btns.push({x,y,w:iw,h:ih,fn:()=>{mSel=k}});ctx.fillStyle=kn?'rgba(128,203,196,.1)':'rgba(0,0,0,.3)';ctx.strokeStyle=kn?'#80cbc4':'#243';ctx.lineWidth=1.3;ctx.beginPath();ctx.roundRect(x,y,iw,ih,10);ctx.fill();ctx.stroke();
+  parts.forEach((q,j)=>{ctx.globalAlpha=kn?1:.45;itemIcon(q,x+18+j*26,y+18,.32);ctx.globalAlpha=1});let nm=kn?buildMerge(parts).def.n:(isW?'⚔ ??? 무기':'💎 ??? 보물');ctx.font='800 11px system-ui';while(nm.length>2&&ctx.measureText(nm).width>iw-14)nm=nm.slice(0,-1);txt(nm,x+8,y+43,11,kn?'#e0f2f1':'#4f6f6a','left')});
+ {const py=H-42;btn('◀◀',W/2-200,py,56,32,()=>mPage=Math.max(0,mPage-10),'#80cbc4',13);pager(mPage,tot,v=>mPage=v,py);btn('▶▶',W/2+144,py,56,32,()=>mPage=Math.min(tot-1,mPage+10),'#80cbc4',13)}}
 if(mSel){const parts=mSel.split('+'),b=buildMerge(parts),def=b.def,kn=SV.mlog[mSel],isW=b.cat==='wep';btns.length=0;ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H);btns.push({x:0,y:0,w:W,h:H,fn:()=>{mSel=null}});const pw=Math.min(W-40,440),ph=230,px=(W-pw)/2,py=(H-ph)/2;ctx.fillStyle='#0f2624';ctx.strokeStyle='#80cbc4';ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(px,py,pw,ph,16);ctx.fill();ctx.stroke();
  txt(kn?def.n:'??? (아직 만들지 않았어요)',W/2,py+34,18,kn?def.c:'#9bb');txt(isW?'⚔ 무기':'💎 보물',W/2,py+54,11,'#80cbc4');parts.forEach((q,j)=>{const x=W/2+(j-(parts.length-1)/2)*90;itemIcon(q,x,py+96,.7);txt(itm(q).n,x,py+134,11,itm(q).c);if(j<parts.length-1)txt('+',x+45,py+100,18,'#fff')});
  wrap(kn?(isW?mStatsText(def,1)+(def.traits.length?' · '+def.traits.map(t=>TRAIT[t][0]).join(', '):''):fxText0(def)):'이 재료로 합체하면 결과가 공개돼요',px+20,py+164,pw-40,12,'#e0f2f1',16);if(isAdm()){btn('⚡ 바로 얻기 (관리자)',W/2-90,py+ph-42,180,32,()=>{const bb=buildMerge(parts),id=bb.id;(bb.cat==='wep'?WEP:GEAR)[id]=bb.def;SV.merged[id]={p:parts.slice(),tr:null};SV.mlog[mSel]=1;SV.own.push(id);save();ST=stat();snd('merge');msg='🔗 '+bb.def.n+' 받음 (보유 '+cntOf(id)+'개)';msgT=1.8},'#ff7a8a',13);btns.unshift(btns.pop())}txt('눌러서 닫기',W/2,py+ph+18,11,'#999')}
@@ -682,7 +687,7 @@ const ACC_MAX=5;let accP=false,accDelC=-1;
 function accInfo(){let a=null;try{a=JSON.parse(localStorage.getItem('bossArenaAcc'))}catch(_){}if(!a||!Array.isArray(a.names)||!a.names.length)a={cur:0,names:['1회차']};if(a.cur>=a.names.length)a.cur=0;a.delAt=a.delAt||[];return a}
 function accPut(a){try{localStorage.setItem('bossArenaAcc',JSON.stringify(a))}catch(_){}}
 function setPick(){const o={};for(const k of SETK)if(SV[k]!==undefined)o[k]=SV[k];return o}
-function freshSV(){return Object.assign({coin:0,mana:0,manaStone:0,w2clr:[],own:['fist'],eq:'fist',clr:[],gear:{helm:null,armor:null,boots:null,trea:null},ores:{},pets:[],pet:null,ranch:null,invDetail:true,fish:{},fishLog:{},dishes:{},recLog:{},meal:null,cnt:{},ach:{},milk:0,milkSeen:0,merged:{},mlog:{},pg:{},sfx:true},setPick())}
+function freshSV(){return Object.assign({coin:0,own:['fist'],eq:'fist',clr:[],gear:{helm:null,armor:null,boots:null,trea:null},ores:{},pets:[],pet:null,ranch:null,invDetail:true,fish:{},fishLog:{},dishes:{},recLog:{},meal:null,cnt:{},ach:{},milk:0,milkSeen:0,merged:{},mlog:{},pg:{},sfx:true},setPick())}
 function accGo(a,data){accPut(a);NOSAVE=true;try{localStorage.setItem('bossArenaSave',JSON.stringify(data))}catch(_){}location.reload()}
 function accSlot(i){try{return JSON.parse(localStorage.getItem('bossArenaSave_'+i))}catch(_){return null}}
 function accSwitch(t){const a=accInfo();if(t===a.cur){accP=false;return}if(a.delAt[t])a.delAt[t]=0;saveNow();try{localStorage.setItem('bossArenaSave_'+a.cur,JSON.stringify(SV))}catch(_){}const d=accSlot(t);a.cur=t;accGo(a,d?Object.assign(d,setPick()):freshSV())}
@@ -914,10 +919,10 @@ function doCook(){if(!POT.length){if(ADD){msg='물고기를 먼저 넣어 주세
 for(const i in need)SV.fish[i]-=need[i];const first=!SV.recLog[key];SV.recLog[key]=1;SV.dishes[key]=(SV.dishes[key]||0)+1;SV.dq=SV.dq||{};(SV.dq[key]=SV.dq[key]||[]).push(Math.round(mgQ*100)/100);SV.cnt.cook=(SV.cnt.cook||0)+1;POT=[];save();snd('sizzle');if(dish(key).sec)setTimeout(()=>snd('magic'),300);else if(first)setTimeout(()=>snd('fanfare'),250);cookRes={key,first,t:0,q:mgQ};mfx(W/2,H*.42,dish(key).sec?70:first?40:16,dish(key).sec?['#ffd54f','#fff','#ff8f00']:['#ffab91','#fff','#ffe0b2'])}
 function eatDish(k){if(!(SV.dishes[k]>0))return;SV.dishes[k]--;const qq=((SV.dq||{})[k]||[]).shift();const q=qq==null?1:qq;SV.meal={k,left:MEAL_N,q};save();snd('coin');msg='🍱 '+dish(k).n+' 냠냠! (품질 '+Math.round(q*100)+'%) 다음 전투 '+MEAL_N+'번 동안 효과';msgT=2}
 function pager(page,total,set,y){const bw=110;btn('◀',W/2-bw/2-62,y,52,32,()=>set(Math.max(0,page-1)),page>0?'#ffab91':'#555',16);txt((page+1)+' / '+Math.max(1,total),W/2,y+21,14,'#eee');btn('▶',W/2+bw/2+10,y,52,32,()=>set(Math.min(total-1,page+1)),page<total-1?'#ffab91':'#555',16)}
-function drawCook(){if(!['cook','dish','fish'].includes(cookTab))cookTab='dish';const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#3e2418');g.addColorStop(1,'#1a0f0a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+function drawCook(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#3e2418');g.addColorStop(1,'#1a0f0a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 ctx.strokeStyle='rgba(255,255,255,.035)';ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
 txt('🍳 요리',W/2,40,24,'#ffab91');btn('← 뒤로',16,8,96,40,()=>{S='title';POT=[]},'#9ab');coinUI();
-const TBS=[['cook','🍳 요리하기'],['dish','🍱 내 요리'],['fish','🐟 물고기']],tw=Math.min(W-32,640),tbw=(tw-16)/3,tx0=(W-tw)/2;
+const TBS=[['cook','🍳 요리하기'],['dish','🍱 내 요리'],['rec','📜 레시피'],['fish','🐟 물고기']],tw=Math.min(W-32,640),tbw=(tw-24)/4,tx0=(W-tw)/2;
 TBS.forEach(([k,l],i)=>{const x=tx0+i*(tbw+8),on=cookTab===k;btns.push({x,y:58,w:tbw,h:34,fn:()=>{cookTab=k;msgT=0}});ctx.fillStyle=on?'rgba(255,171,145,.25)':'rgba(255,255,255,.05)';ctx.strokeStyle=on?'#ffab91':'#554';ctx.lineWidth=on?2.5:1.5;ctx.beginPath();ctx.roundRect(x,58,tbw,34,10);ctx.fill();ctx.stroke();txt(l,x+tbw/2,81,tbw<110?12:14,on?'#ffe0d0':'#bba')});
 const y0=102,land=W>H*1.2;
 if(cookTab==='cook'){const lw=land?(W-48)*.48:W-32,lx=16,rx=land?lx+lw+16:16,rw=land?W-rx-16:W-32,ph=land?H-y0-14:Math.min(340,H*.46);
@@ -943,7 +948,7 @@ else if(cookTab==='dish'){const L=RECIPES.filter(k=>SV.dishes[k]>0),cw=Math.min(
  if(!L.length){txt('만든 요리가 없어요',W/2,yy+50,15,'#a1887f');txt('🍳 요리하기 탭에서 물고기로 요리해요',W/2,yy+72,12,'#8d6e63')}
  const cols=cw>=560?2:1,iw=(cw-(cols-1)*10)/cols,rh=50,per=Math.max(1,Math.floor((H-yy-56)/(rh+8)))*cols,tot=Math.ceil(L.length/per);dishPage=Math.min(dishPage,Math.max(0,tot-1));
  L.slice(dishPage*per,(dishPage+1)*per).forEach((k,i)=>{const d=dish(k),x=x0+(i%cols)*(iw+10),y=yy+Math.floor(i/cols)*(rh+8);ctx.fillStyle='rgba(255,255,255,.06)';ctx.strokeStyle=d.sec?'#ffd54f':'#8d6e63';ctx.lineWidth=d.sec?2:1.5;ctx.beginPath();ctx.roundRect(x,y,iw,rh,10);ctx.fill();ctx.stroke();dishIcon(k,x+26,y+rh/2,.7);
-  txt(d.n+'  × '+SV.dishes[k],x+52,y+20,14,d.sec?'#ffd54f':'#ffe0b2','left',iw-52-150);ctx.font='800 10px system-ui,-apple-system,sans-serif';let t2=dishFx(d);while(t2.length>4&&ctx.measureText(t2).width>iw-52-150)t2=t2.slice(0,-2);if(t2!==dishFx(d))t2+='…';txt(t2,x+52,y+37,10,'#bcaaa4','left');btn('📜 레시피',x+iw-146,y+9,72,32,()=>{recSel=k},'#ffab91',12);btn('먹기',x+iw-68,y+9,60,32,()=>eatDish(k),'#ffb74d',14)});
+  txt(d.n+'  × '+SV.dishes[k],x+52,y+20,14,d.sec?'#ffd54f':'#ffe0b2','left',iw-52-80);ctx.font='800 10px system-ui,-apple-system,sans-serif';let t2=dishFx(d);while(t2.length>4&&ctx.measureText(t2).width>iw-52-80)t2=t2.slice(0,-2);if(t2!==dishFx(d))t2+='…';txt(t2,x+52,y+37,10,'#bcaaa4','left');btn('먹기',x+iw-70,y+9,60,32,()=>eatDish(k),'#ffb74d',15)});
  if(tot>1)pager(dishPage,tot,v=>dishPage=v,H-44)}
 else if(cookTab==='rec'){const found=RECIPES.filter(k=>SV.recLog[k]).length,sf=Object.keys(SECRET).filter(k=>SV.recLog[k]).length;txt('발견한 레시피 '+found+' / '+RECIPES.length+'   ·   ✨ 시크릿 '+sf+' / '+Object.keys(SECRET).length,W/2,y0+12,13,'#ffccbc');
  const cw=Math.min(W-32,900),x0=(W-cw)/2,cols=Math.max(2,Math.floor((cw+8)/150)),iw=(cw-(cols-1)*8)/cols,ih=52,rows=Math.max(1,Math.floor((H-y0-24-52)/(ih+8))),per=rows*cols,tot=Math.ceil(RECIPES.length/per);recPage=Math.min(recPage,tot-1);
@@ -1068,7 +1073,7 @@ document.body.appendChild(ov);const inp=ov.querySelector('input');setTimeout(()=
 const close=()=>ov.remove(),ok=()=>{if(pwHash(inp.value)===1576695482){SV.admin=true;try{admGrant()}catch(_){}if(SV.afb===undefined)SV.afb=true;save();close();msg='관리자 모드 활성화!';msgT=1.6}else{ov.querySelector('#pwe').textContent='비밀번호가 틀렸어요';inp.value='';inp.focus()}};
 ov.querySelector('#pwc').onclick=close;ov.querySelector('#pwo').onclick=ok;inp.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')ok();if(e.key==='Escape')close()});ov.addEventListener('pointerdown',e=>{if(e.target===ov)close()})}
 function pause(){msgT=0;if(S!=='play')return;S='pause';snd('pause');J.id=null;atkId=null;for(const k in K)K[k]=0}
-function goBack(){if(KCAP){KCAP=null;return}if(S==='merge'&&(mRes||mSel)){mRes=null;mSel=null;return}if(S==='cook'&&(cookRes||recSel)){cookRes=null;recSel=null;return}if(wpd){if(wpSk){wpSk=false;return}wpd=null;return}if(adm){adm=false;return}if(S==='set'){S=setFrom;msgT=0;return}if(S==='lose'&&MODE==='mine'){S='mines';return}const m={help:'title',skill:'title',forge:'title',enh:'title',online:'title',trade:'title',merge:'title',ach:'title',cook:'title',fish:'select',ranch:'select',dig:'select',caravan:'select',drops:'select',laby:'select',isle:'select',nest:'select',fount:'select',relic:'select',contract:'select',hforge:'select',hsoul:'select',hdex:'select',hroul:'select',hvaltar:'select',hvgift:'select',hvdex:'select',hvbox:'select',fuse:'title',gate2:'select',w2:'title',engrave:'select',titles:'ach',confess:'select',stats:'set',codex:'title',backup:'set',layout:'set',keys:'set',craft:'title',mines:'select',cat:'title',select:'cat',info:'select',shop:'title',equip:'title',win:'select',lose:'select'};if(S==='play')pause();else if(S==='pause')S='play';else if(m[S]){S=m[S];msgT=0}}
+function goBack(){if(KCAP){KCAP=null;return}if(S==='merge'&&(mRes||mSel)){mRes=null;mSel=null;return}if(S==='cook'&&(cookRes||recSel)){cookRes=null;recSel=null;return}if(wpd){if(wpSk){wpSk=false;return}wpd=null;return}if(adm){adm=false;return}if(S==='set'){S=setFrom;msgT=0;return}if(S==='lose'&&MODE==='mine'){S='mines';return}const m={help:'title',skill:'title',forge:'title',enh:'title',online:'title',trade:'title',merge:'title',ach:'title',cook:'title',fish:'select',ranch:'select',dig:'select',caravan:'select',drops:'select',laby:'select',isle:'select',nest:'select',fount:'select',relic:'select',contract:'select',hforge:'select',hsoul:'select',hdex:'select',hroul:'select',hvaltar:'select',hvgift:'select',hvdex:'select',hvbox:'select',fuse:'title',gate2:'select',engrave:'select',titles:'ach',confess:'select',stats:'set',codex:'title',backup:'set',layout:'set',keys:'set',craft:'title',mines:'select',cat:'title',select:'cat',info:'select',shop:'title',equip:'title',win:'select',lose:'select'};if(S==='play')pause();else if(S==='pause')S='play';else if(m[S]){S=m[S];msgT=0}}
 // 키 설정: 동작마다 키 2개 (e.code 기준이라 한글 입력 상태에서도 동작)
 const KACT=[['up','위로 이동'],['down','아래로 이동'],['left','왼쪽 이동'],['right','오른쪽 이동'],['atk','공격'],['dash','대시'],['lock','방향 고정'],['sk0','스킬 1'],['sk1','스킬 2'],['sk2','스킬 3'],['sk3','스킬 4'],['sk4','스킬 5'],['pause','일시정지 / 뒤로']];
 const KDEF={up:['KeyW','ArrowUp'],down:['KeyS','ArrowDown'],left:['KeyA','ArrowLeft'],right:['KeyD','ArrowRight'],atk:['KeyJ','Space'],dash:['KeyK','Shift'],lock:['Control','KeyL'],sk0:['KeyU','Digit1'],sk1:['KeyI','Digit2'],sk2:['KeyO','Digit3'],sk3:['KeyH','Digit4'],sk4:['KeyN','Digit5'],pause:['KeyP','Escape']};
@@ -4496,9 +4501,7 @@ const CODEX_STORY=[
 '대성당의 정점에 선 대성인. 그가 승천하면 성수만이 너를 지킨다.'];
 function bookText(t,x,y,w,size,color,lineH,maxLines){wrap(t,x,y,w,size,color,lineH);}
 function drawCodex(){
- const list=W2ON()?BOSSES.map((b,i)=>b.w2?i:-1).filter(i=>i>=0):BOSSES.map((b,i)=>b.w2?-1:i).filter(i=>i>=0);
- if(!list.length){btn('← 뒤로',16,8,96,40,()=>{S='title'},'#9ab');txt('도감을 불러오는 중…',W/2,H/2,18,'#e1bee7');w2Load();return}
- const page=Math.max(0,Math.min(list.length-1,codexIdx)),i=list[page]||0,b=BOSSES[i],ok=SV.clr.includes(i);
+ const i=Math.max(0,Math.min(BOSSES.length-1,codexIdx)),b=BOSSES[i],ok=SV.clr.includes(i);
  const bw=Math.min(W-24,760),bh=Math.min(H-112,430),bx=(W-bw)/2,by=Math.max(58,(H-bh)/2-2),gap=5,pw=(bw-gap)/2,ph=bh;
  // 바깥 책 표지와 종이
  ctx.fillStyle='#49301f';ctx.strokeStyle='#c69b60';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(bx-5,by-5,bw+10,bh+10,14);ctx.fill();ctx.stroke();
@@ -4523,9 +4526,9 @@ function drawCodex(){
    txt('주요 특징',lx,by+Math.min(267,ph*.70),13,'#8b5e31','left');
    bookText(b.d,lx,by+Math.min(291,ph*.76),inner,Math.min(13,pw/22),ink,18);
    txt('체력  '+b.hp+'     이동 속도  '+b.sp,lx,by+ph-23,11,'#876b48','left',inner);
-   txt((page+1)+' / '+list.length,bx+pw-14,by+48,10,'#9b8059','right');
+   txt((i+1)+' / '+BOSSES.length,bx+pw-14,by+48,10,'#9b8059','right');
    txt('기록자의 관찰',rx,by+50,15,'#8b5e31','left');
-   bookText(b.story||CODEX_STORY[i]||'아직 기록이 없습니다.',rx,by+78,inner,Math.min(14,pw/21),ink,Math.min(21,ph*.055));
+   bookText(CODEX_STORY[i],rx,by+78,inner,Math.min(14,pw/21),ink,Math.min(21,ph*.055));
    txt('확인된 공격 패턴',rx,by+ph*.58,13,'#8b5e31','left');
    const names=b.atk.map(k=>PAT[k]?PAT[k][0]:k).slice(0,8);
    names.forEach((name,j)=>{const col=j%2,row=Math.floor(j/2),xx=rx+col*(inner/2),yy=by+ph*.64+row*21;txt('• '+name,xx,yy,Math.min(11,pw/24),ink,'left')});
@@ -4534,8 +4537,8 @@ function drawCodex(){
  // navigation and page controls
  const navY=Math.min(H-46,by+ph+17),nbw=Math.min(112,(W-56)/3);
  btn('◀ 이전',W/2-nbw*1.5-8,navY,nbw,34,()=>{codexIdx=Math.max(0,codexIdx-1)},'#d7bd8c',13);
- btn('목록 '+(page+1)+' / '+list.length,W/2-nbw/2,navY,nbw,34,()=>{codexIdx=(codexIdx+1)%list.length},'#c59cff',12);
- btn('다음 ▶',W/2+nbw/2+8,navY,nbw,34,()=>{codexIdx=Math.min(list.length-1,codexIdx+1)},'#d7bd8c',13);
+ btn('목록 '+(i+1)+' / '+BOSSES.length,W/2-nbw/2,navY,nbw,34,()=>{codexIdx=(codexIdx+1)%BOSSES.length},'#c59cff',12);
+ btn('다음 ▶',W/2+nbw/2+8,navY,nbw,34,()=>{codexIdx=Math.min(BOSSES.length-1,codexIdx+1)},'#d7bd8c',13);
  btn('닫기',W-76,10,60,36,()=>S='title','#9ab',12);
 }
 
@@ -4550,19 +4553,18 @@ if(S!=='play'&&S!=='win'&&S!=='lose'){for(let i=0;i<30;i++){ctx.fillStyle='rgba(
 if(S==='title'&&!SV.nick){accTick();const cy=H*.4;txt('👋',W/2,cy-70,54,'#fff');txt('환영해요!',W/2,cy,28,'#5ef');txt('시작하기 전에 닉네임부터 정해 주세요',W/2,cy+32,14,'#9ab','center',W-40);txt('랭킹 · 채팅 · 우편함 · 계정 목록에 이 이름이 보여요',W/2,cy+54,11,'#778','center',W-40);btn('🏷 닉네임 정하기',W/2-120,cy+80,240,56,()=>askNick(()=>{msg='반가워요, '+SV.nick+'!';msgT=2}),'#5ef',20);{const a=accInfo();if(a.names.length>1)btn('👤 다른 계정',W/2-80,cy+150,160,40,()=>{accP=true;accDelC=-1},'#9ab',14)}btn('💾 백업 파일 불러오기',W/2-170,cy+200,165,38,importSave,'#7fffb2',12);btn('🔑 관리자',W/2+5,cy+200,165,38,askPw,'#ff7a8a',12);txt('다른 기기에서 하던 걸 이어서 하려면: 그 기기 설정 → 기록·데이터 → 백업 파일 저장 → 여기서 불러오기',W/2,cy+258,10,'#778','center',W-30);if(MKMODE===''&&tm<6)txt('서버 연결 중…',W/2,H-20,11,'#667')}
 else if(S==='title'){const land=W>H*1.25;accTick();{const a=accInfo(),bw=Math.min(118,W*.3),bx=land?W-16-110-bw:W-16-bw,by=land?8:46;btns.push({x:bx,y:by,w:bw,h:32,fn:()=>{accP=true;accDelC=-1}});ctx.fillStyle='rgba(94,238,255,.08)';ctx.strokeStyle='#5ef8';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(bx,by,bw,32,16);ctx.fill();ctx.stroke();txt('👤 '+(SV.nick||a.names[a.cur])+' ▾',bx+bw/2,by+21,13,'#bff','center',bw-12);{const tt=titleTxt();if(tt)txt(tt,bx+bw/2,by+46,11,'#ffd54f','center',Math.max(bw,160))}}
  const LX=land?W*.3:W/2,bossY=land?H*.3:H*.2,ly=land?H*.55:H*.36;if(window.__HVR)drawBoss(LX,bossY,Math.min(56,W/8,H/8),Math.floor(tm/2)%BOSSES.length,0,1);
- const w2m=W2ON();txt('BOSS ARENA',LX,ly,Math.min(46,(land?W*.5:W)/8),w2m?'#ce93d8':'#5ef');txt(w2m?'🌍 2세계 · 문 너머의 세계':'보스를 쓰러뜨려라',LX,ly+28,15,w2m?'#b39ddb':'#9ab');
- {const pw=Math.min(240,land?W*.34:W-64),ph=58,px=LX-pw/2,py=ly+48,pl=.5+.5*Math.sin(tm*3);ctx.fillStyle=(w2m?'rgba(206,147,216,':'rgba(94,238,255,')+(.08+.08*pl)+')';ctx.beginPath();ctx.roundRect(px-6,py-6,pw+12,ph+12,20);ctx.fill();btn('▶  PLAY',px,py,pw,ph,()=>{if(w2m){S='w2';w2Load()}else S='cat'},w2m?'#ce93d8':'#5ef',24);let wy=py+ph+8;if(!w2m&&SV.last!=null&&BOSSES[SV.last]&&catOpen(BOSSES[SV.last].cat)&&bossOpen(SV.last)){const bb=BOSSES[SV.last];btn('⚡ 최근: '+bb.n,px,py+ph+8,pw,30,()=>startFight(SV.last),bb.c,13);wy+=38}
-  if(SV.gk)btn(w2m?'🌍 1세계로 돌아가기':'🌍 2세계로 가기',px,wy,pw,30,()=>{SV.curW=w2m?1:2;save();msg=w2m?'🌍 1세계로 돌아왔어요':'🌍 2세계에 왔어요';msgT=1.6;try{snd('equip')}catch(_){}},w2m?'#5ef':'#ce93d8',13)}
+ txt('BOSS ARENA',LX,ly,Math.min(46,(land?W*.5:W)/8),'#5ef');txt('보스를 쓰러뜨려라',LX,ly+28,15,'#9ab');
+ {const pw=Math.min(240,land?W*.34:W-64),ph=58,px=LX-pw/2,py=ly+48,pl=.5+.5*Math.sin(tm*3);ctx.fillStyle='rgba(94,238,255,'+(.08+.08*pl)+')';ctx.beginPath();ctx.roundRect(px-6,py-6,pw+12,ph+12,20);ctx.fill();btn('▶  PLAY',px,py,pw,ph,()=>{S='cat'},'#5ef',24);if(SV.last!=null&&BOSSES[SV.last]&&catOpen(BOSSES[SV.last].cat)&&bossOpen(SV.last)){const bb=BOSSES[SV.last];btn('⚡ 최근: '+bb.n,px,py+ph+8,pw,30,()=>startFight(SV.last),bb.c,13)}}
  const FO=fishOpen(),SO=skyOpen(),VO=volcOpen(),TL=[['🎒','인벤토리','장비 · 펫 · 재료','#b07cff',()=>{S='equip';msgT=0}],['🛒','상점','무기 · 방어구 사기','#ffc85a',()=>{S='shop';msgT=0}],['🔥','용광로','광석을 녹여 장비 만들기','#ff8a65',()=>{S='forge';msgT=0}],['📖','보스 도감','만난 보스 기록','#c59cff',()=>{codexIdx=0;S='codex'}],['🍳','요리','물고기로 버프 요리','#ff8a65',()=>{if(!FO){msg='바다 보스를 모두 깨면 열려요';msgT=1.6;return}S='cook';cookTab='cook';msgT=0},!FO],['🔗','합체','무기·보물 합쳐 새로 만들기','#80cbc4',()=>{S='merge';mTab='make';MSL=[];msgT=0}],['🔨','강화','장비를 +10까지 강하게','#ff7043',()=>{if(!SO){msg='하늘 보스를 모두 깨면 열려요';msgT=1.6;return}S='enh';enSel=null;msgT=0},!SO,'하늘 보스 클리어 시 열림'],['✨','스킬 도감','스킬 종류와 효과','#ffd54f',()=>{if(!VO){msg='화산 보스를 모두 깨면 열려요';msgT=1.6;return}S='skill';msgT=0},!VO,'화산 보스 클리어 시 열림'],['🔮','스킬 합성','스킬 2~3개를 하나로','#ce93d8',()=>{if(!VO){msg='화산 보스를 모두 깨면 열려요';msgT=1.6;return}FU={sl:[],ph:'pick',t:0,res:null,mg:null};S='fuse';msgT=0},!VO,'화산 보스 클리어 시 열림']];
- const pR=LX+Math.min(120,W*.17)+16,gw=land?Math.min(H>=440?510:470,W-20-pR):Math.min(W-32,460),gx=land?Math.max(pR,Math.min(W*.72-gw/2,W-20-gw)):W/2-gw/2,gy0=land?Math.max(60,H*.12):ly+(SV.last!=null&&BOSSES[SV.last]&&!W2ON()?158:118)+(SV.gk?38:0);
+ const pR=LX+Math.min(120,W*.17)+16,gw=land?Math.min(H>=440?510:470,W-20-pR):Math.min(W-32,460),gx=land?Math.max(pR,Math.min(W*.72-gw/2,W-20-gw)):W/2-gw/2,gy0=land?Math.max(60,H*.12):ly+(SV.last!=null&&BOSSES[SV.last]?158:118);
  const tile=(t,x,y,w,h,big)=>{const[ic,l,sub,c,fn,lk,lt]=t,pr=PR&&PR.x===x&&PR.y===y;btns.push({x,y,w,h,fn});ctx.fillStyle=pr?c+'40':big?c+'1a':'rgba(255,255,255,.05)';ctx.strokeStyle=c+(pr?'':big?'':'88');ctx.lineWidth=big?2.5:1.5;ctx.beginPath();ctx.roundRect(x,y,w,h,big?18:14);ctx.fill();ctx.stroke();
   if(big){const r=Math.min(26,h*.3);ctx.fillStyle=c+'2a';ctx.beginPath();ctx.arc(x+h*.5,y+h/2,r,0,TAU);ctx.fill();txt(ic,x+h*.5,y+h/2+r*.38,r,'#fff');txt(l,x+h*.95,y+h/2-2,Math.min(20,h*.24),c,'left',w-h);txt(sub,x+h*.95,y+h/2+16,11,'#99a','left',w-h-6)}
   else{txt(ic,x+w/2,y+h*.48,Math.min(22,h*.34),'#fff');txt(l,x+w/2,y+h-9,Math.min(12.5,h*.19),c,'center',w-6)}
   if(lk){ctx.fillStyle='rgba(8,8,16,.9)';ctx.beginPath();ctx.roundRect(x,y,w,h,big?18:14);ctx.fill();const m2=/^(.+?)\s*(클리어 시 열림)$/.exec(lt||'');if(m2){txt('🔒',x+w/2,y+h*.36,Math.min(18,h*.28),'#fff');txt(m2[1],x+w/2,y+h-21,10,'#ffe082','center',w-6);txt('클리어 시 열림',x+w/2,y+h-8,9,'#c9b97a','center',w-6)}else{txt('🔒',x+w/2,y+h*.45,Math.min(18,h*.3),'#fff');txt(lt||'잠김',x+w/2,y+h-8,9,'#ffe082','center',w-4)}}};
- const mainT=TL.slice(0,2),craftT=[TL[2],TL[5],TL[6],TL[4]],bookT=[TL[3],TL[7]];
- const avail=H-gy0-14,h1=Math.max(62,Math.min(104,avail*.36)),ws=(gw-30)/4,hs=Math.max(54,Math.min(90,ws*.85,avail*.3)),hb=Math.max(34,Math.min(50,avail*.16));
+ const mainT=TL.slice(0,2),craftT=[TL[2],TL[5],TL[6],TL[8],TL[4]],bookT=[TL[3],TL[7]];
+ const avail=H-gy0-14,h1=Math.max(62,Math.min(104,avail*.36)),ws=(gw-40)/5,hs=Math.max(54,Math.min(90,ws*.85,avail*.3)),hb=Math.max(34,Math.min(50,avail*.16));
  let y=gy0;mainT.forEach((t,i)=>tile(t,gx+i*((gw-12)/2+12),y,(gw-12)/2,h1,true));y+=h1+16;
- if(!w2m){txt('제작 · 강화',gx+2,y,11,'#8a8fa8','left');y+=8;craftT.forEach((t,i)=>tile(t,gx+i*(ws+10),y,ws,hs,false));y+=hs+16}
+ txt('제작 · 강화',gx+2,y,11,'#8a8fa8','left');y+=8;craftT.forEach((t,i)=>tile(t,gx+i*(ws+10),y,ws,hs,false));y+=hs+16;
  txt('도감',gx+2,y,11,'#8a8fa8','left');y+=8;bookT.forEach((t,i)=>{const bw=(gw-10)/2,x=gx+i*(bw+10),[ic,l,sub,c,fn,lk,lt]=t,pr=PR&&PR.x===x&&PR.y===y;btns.push({x,y,w:bw,h:hb,fn});ctx.fillStyle=pr?c+'40':'rgba(255,255,255,.04)';ctx.strokeStyle=c+'66';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x,y,bw,hb,hb/2);ctx.fill();ctx.stroke();txt(ic+'  '+l,x+bw/2,y+hb/2+5,13,lk?'#666':c,'center',bw-10);if(lk)txt('🔒',x+bw-16,y+hb/2+5,11,'#ffe082')});
 
  if(msgT>0){ctx.globalAlpha=Math.min(1,msgT*2);ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect(W/2-170,H-40,340,28,14);ctx.fill();txt(msg,W/2,H-20,13,'#ffe082');ctx.globalAlpha=1}
@@ -4671,7 +4673,6 @@ else if(S==='hvdex'){drawHvDex()}
 else if(S==='hvbox'){drawHvBox()}
 else if(S==='fuse'){drawFuse()}
 else if(S==='gate2'){drawGate2()}
-else if(S==='w2'){drawW2()}
 else if(S==='engrave'){drawEngrave()}
 else if(S==='confess'){drawConfess()}
 else if(S==='titles'){drawTitles()}
@@ -5736,7 +5737,7 @@ function drawGateSel(){gateBg(0,0,W,H);txt('???',W/2,44,24,'#ff5252');btn('← �
  else{btns.push({x,y,w,h,fn:()=>{S='gate2';msgT=0}});ctx.fillStyle='rgba(20,0,30,.55)';ctx.strokeStyle='#b388ff';ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(x,y,w,h,18);ctx.fill();ctx.stroke();portalDraw(W/2,y+h*.42,Math.min(70,h*.17));txt('🚪 2세계로 가는 문',W/2,y+h-40,20,'#e1bee7');txt('문지기는 사라지고 문만 남았다',W/2,y+h-18,12,'#b39ddb')}
  if(msgT>0){ctx.globalAlpha=Math.min(1,msgT*2);ctx.fillStyle='rgba(0,0,0,.75)';ctx.beginPath();ctx.roundRect(W/2-180,H-40,360,30,15);ctx.fill();txt(msg,W/2,H-19,13,'#ffe082','center',350);ctx.globalAlpha=1}}
 function drawGate2(){gateBg(0,0,W,H);const R=Math.min(110,H*.2,W*.2);portalDraw(W/2,H*.42,R);txt('2세계로 가는 문이 열렸다',W/2,Math.max(40,H*.42-R*1.75),20,'#e1bee7');
- const bw=Math.min(220,W*.42);btn('🚪 문으로 들어가기',W/2-bw-6,H-70,bw,44,w2Enter,'#b388ff',15);btn('← 돌아가기',W/2+6,H-70,bw,44,()=>{catSel=15;S='select';msgT=0},'#9ab',15);
+ const bw=Math.min(220,W*.42);btn('🚪 문으로 들어가기',W/2-bw-6,H-70,bw,44,()=>{msg='🔒 2세계는 아직 준비 중이에요 · 업데이트를 기다려 주세요!';msgT=2.6;shake=6;try{snd('hurt')}catch(_){}},'#b388ff',15);btn('← 돌아가기',W/2+6,H-70,bw,44,()=>{catSel=15;S='select';msgT=0},'#9ab',15);
  if(msgT>0){ctx.globalAlpha=Math.min(1,msgT*2);ctx.fillStyle='rgba(0,0,0,.8)';ctx.beginPath();ctx.roundRect(W/2-200,H-118,400,34,17);ctx.fill();txt(msg,W/2,H-95,14,'#ffe082','center',390);ctx.globalAlpha=1}}
 // ===== 🎀 방어구 부착물: 등급이 아니라 그 장비에 원래 달린 것 (이름·설명에 맞춰 날개·뿔·왕관·망토 등) =====
 const ATT={helm:['wings','plume','horns','unihorn','fins','laurel','orbit','antenna','ribbon'],armor:['wings','scarf','emblem','chains','fur','belt','skull'],boots:['spur','flame','toespike','fur','buckle','anklet','jet']};
@@ -6295,29 +6296,6 @@ function ofMine(){const body=ofPanelBase('📨 내가 보낸 제안');const L=OF
  if(!L.length)body.insertAdjacentHTML('beforeend','<div style="color:#889;padding:16px;text-align:center">보낸 제안이 없어요</div>');
  L.forEach(o=>ofRow(body,'<div style="color:#81d4fa;font-size:12px">→ '+ofEsc(o.lb||'물건')+' · '+mkAgo(o.t)+'</div><div style="color:#fff;word-break:break-all">내 제안: '+ofEsc(ofItemsTxt(o))+'</div>',[ofBtn('취소','#ff8a80',async()=>{try{const k=await ofResolve(o,true);if(k==='acc'){}}catch(e){msg='취소 실패 ('+(e&&e.code||'오류')+')';msgT=2}ofMine()})]))}
 
-// ===== 🌍 2세계: 데이터는 boss2.html 에서 불러와요 (게임 엔진·저장은 1세계와 공유) =====
-let W2=null,W2st='idle',W2ERR='',w2Sel=-1;
-function W2ON(){return !!(SV&&SV.gk&&SV.curW===2)}
-function w2Parse(html){const doc=new DOMParser().parseFromString(html,'text/html'),el=doc.getElementById('world2');if(!el)throw new Error('boss2.html 안에 world2 데이터가 없어요');const d=JSON.parse(el.textContent);if(!d||d.ver!==1||!Array.isArray(d.regions))throw new Error('2세계 데이터 형식이 달라요');return d}
-async function w2Load(force){if(W2st==='loading')return;if(W2&&!force)return;W2st='loading';W2ERR='';
- try{const r=await fetch('boss2.html?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('boss2.html 을 찾을 수 없어요 ('+r.status+')');W2=w2Parse(await r.text());W2st='ok'}
- catch(e){console.error(e);W2st='err';W2ERR=location.protocol==='file:'?'파일로 직접 열면 2세계를 불러올 수 없어요 · 사이트(넷리파이)에서 열어 주세요':String(e&&e.message||e)}}
-function w2Enter(){if(!SV.gk){msg='🔒 「???」의 문지기를 쓰러뜨려야 2세계 문이 열려요';msgT=2.6;return}SV.w2=1;SV.curW=2;save();S='title';msg='🌍 2세계에 왔어요!';msgT=2;w2Sel=-1;w2Load();try{snd('fanfare')}catch(_){}}
-function w2Bg(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#120022');g.addColorStop(.55,'#07001a');g.addColorStop(1,'#000');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
- ctx.save();for(let i=0;i<46;i++){const x=(i*173.3)%W,y=(i*97.1+tm*(8+i%5*4))%H,a=.25+.25*Math.sin(tm*2+i);ctx.fillStyle='rgba(206,147,216,'+a+')';ctx.fillRect(x,y,2,2)}
- ctx.strokeStyle='rgba(179,136,255,.08)';ctx.lineWidth=2;for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(W/2,H*1.15,(tm*24+i*H*.3)%(H*1.2)+H*.2,Math.PI,TAU);ctx.stroke()}ctx.restore()}
-function drawW2(){w2Bg();const d=W2||{};txt('🌍 '+(d.name||'2세계'),W/2,40,24,d.c||'#e1bee7');if(d.sub)txt(d.sub,W/2,62,12,'#b39ddb','center',W-220);
- btn('← 뒤로',16,8,96,40,()=>{S='title';msgT=0},'#9ab',14);coinUI();
- if(W2st==='loading'||W2st==='idle'){portalDraw(W/2,H*.45,Math.min(60,H*.13));txt('문 너머를 불러오는 중…',W/2,H*.45+Math.min(60,H*.13)*1.9,14,'#cfa8ff');return}
- if(W2st==='err'){txt('⚠ 2세계를 불러오지 못했어요',W/2,H*.38,17,'#ff8a80');txt(W2ERR,W/2,H*.38+26,12,'#e1bee7','center',W-40);btn('🔄 다시 시도',W/2-90,H*.38+52,180,40,()=>w2Load(true),'#b388ff',14);return}
- const R=d.regions,w=Math.min(W-32,760),x0=(W-w)/2,cols=w>=560?3:2,gap=10,cw=(w-gap*(cols-1))/cols,ch=Math.min(150,Math.max(104,(H-130)/Math.ceil(R.length/cols)-gap)),y0=84;
- R.forEach((r,i)=>{const x=x0+(i%cols)*(cw+gap),y=y0+Math.floor(i/cols)*(ch+gap),open=!!r.open,c=r.c||'#b388ff';
-  btns.push({x,y,w:cw,h:ch,fn:()=>{if(!open){msg='🔒 '+(r.n||'이 지역')+' · '+(r.lock||'곧 업데이트로 열려요!');msgT=2.4;try{snd('hurt')}catch(_){}return}msg='🚧 '+r.n+' 보스는 다음 업데이트에서 만나요!';msgT=2.4}});
-  ctx.fillStyle=open?c+'22':'rgba(255,255,255,.04)';ctx.strokeStyle=open?c:c+'55';ctx.lineWidth=open?2.5:1.5;ctx.beginPath();ctx.roundRect(x,y,cw,ch,14);ctx.fill();ctx.stroke();
-  txt(r.ic||'❔',x+cw/2,y+ch*.38,Math.min(34,ch*.28),'#fff');txt(open?r.n:(r.n||'???'),x+cw/2,y+ch*.62,15,open?c:'#9a8fb0','center',cw-16);txt(open?(r.d||''):'🔒 '+(r.lock||'준비 중'),x+cw/2,y+ch*.62+20,11,open?'#d1c4e9':'#776d8a','center',cw-16)});
- if(d.note)txt(d.note,W/2,H-14,11,'#9d8fb8','center',W-30);
- if(msgT>0){ctx.globalAlpha=Math.min(1,msgT*2);ctx.fillStyle='rgba(0,0,0,.8)';ctx.beginPath();ctx.roundRect(W/2-200,H-58,400,32,16);ctx.fill();txt(msg,W/2,H-37,13,'#ffe082','center',390);ctx.globalAlpha=1}}
-
 window.__HVR=1;try{wsInit()}catch(e){}try{imbApplyAll()}catch(e){}
 // 게임 루프는 스크립트를 끝까지 읽은 다음에 시작해요 (뒤쪽 const를 먼저 건드리지 않도록)
 requestAnimationFrame(t=>{last=t;mainLoop(t)});
@@ -6351,136 +6329,4 @@ function fsToggle(){try{if(document.fullscreenElement)document.exitFullscreen();
   exitAt=Date.now();msg='한 번 더 누르면 게임이 꺼져요';msgT=2});
  setInterval(()=>{if(!armed&&exitAt&&(Date.now()-exitAt>2000||S!=='title')){exitAt=0;arm()}},200);
 })();
-
-// ===== 🌌 2세계: 우주 · 달 보스 · 마나 =====
-let W2BOSS_IDS=[],W2WIN_ID=null;
-const W2MIN_MANA=10,W2COIN_STEP=10000,W2MANA_STEP=.1;
-let w2ManaOpen=false;
-const w2ManaScale=()=>Math.max(.01,(Number(SV.mana)||0)/10);
-const w2CurrentBoss=()=>MODE==='boss'&&BOSSES[cur]&&BOSSES[cur].w2?BOSSES[cur]:null;
-function w2RegionBosses(region){return W2BOSS_IDS.filter(i=>BOSSES[i].w2Region===region)}
-function w2Done(id){return (SV.w2clr||[]).includes(id)}
-function w2RegionOpen(i){if(!W2||!W2.regions[i])return false;if(W2.regions[i].open)return true;const prev=W2.regions[i-1];return !!(prev&&w2RegionBosses(prev.id).length&&w2RegionBosses(prev.id).every(id=>w2Done(BOSSES[id].w2Id)))}
-function w2BossOpen(i){const b=BOSSES[i];if(!b||!b.w2)return false;const prev=w2RegionBosses(b.w2Region).filter(j=>W2BOSS_IDS.indexOf(j)<W2BOSS_IDS.indexOf(i));return !prev.length||w2Done(BOSSES[prev[prev.length-1]].w2Id)}
-function w2RegisterData(d){
- if(!Array.isArray(d.bosses)||!Array.isArray(d.items))throw new Error('2세계 보스 또는 장비 데이터가 올바르지 않아요');
- for(const it of d.items){
-  if(!it||!it.id||!it.n)throw new Error('2세계 장비 데이터에 ID 또는 이름이 없어요');
-  const def=Object.assign({},it);delete def.id;
-  if(def.cat==='wep'){def.w2Item=1;WEP[it.id]=def}
-  else{def.w2Item=1;GEAR[it.id]=def}
- }
- W2BOSS_IDS=[];
- for(const raw of d.bosses){
-  if(!raw||!raw.id||!raw.region||!Array.isArray(raw.atk)||!raw.atk.length)throw new Error('2세계 보스 데이터가 올바르지 않아요');
-  let i=BOSSES.findIndex(b=>b.w2Id===raw.id);
-  if(i<0){const b=Object.assign({},raw,{w2:1,w2Id:raw.id,w2Region:raw.region,cat:16});i=BOSSES.push(b)-1}
-  W2BOSS_IDS.push(i);
- }
- regMerged();
-}
-function w2Parse(html){const doc=new DOMParser().parseFromString(html,'text/html'),el=doc.getElementById('world2');if(!el)throw new Error('boss2.html 안에 world2 데이터가 없어요');const d=JSON.parse(el.textContent);if(!d||d.ver!==1||!Array.isArray(d.regions)||!Array.isArray(d.items)||!Array.isArray(d.bosses))throw new Error('2세계 데이터 형식이 달라요');return d}
-async function w2Load(force){
- if(W2st==='loading')return;if(W2&&!force){try{w2RegisterData(W2)}catch(e){console.error(e);W2st='err';W2ERR=e.message}return}
- W2st='loading';W2ERR='';
- try{const r=await fetch('boss2.html?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('boss2.html 을 찾을 수 없어요 ('+r.status+')');const d=w2Parse(await r.text());w2RegisterData(d);W2=d;W2st='ok'}
- catch(e){console.error(e);W2st='err';W2ERR=location.protocol==='file:'?'파일로 직접 열면 2세계를 불러올 수 없어요 · 사이트에서 열어 주세요':String(e&&e.message||e)}
-}
-function w2Enter(){if(!SV.gk){msg='🔒 「???」의 문지기를 쓰러뜨려야 2세계 문이 열려요';msgT=2.6;return}SV.w2=1;SV.curW=2;save();S='w2';msg='🌌 우주 세계에 도착했어요! 마나 10 이상부터 보스전에 입장할 수 있어요';msgT=2.5;w2Sel=-1;w2Load();try{snd('fanfare')}catch(_){}}
-function w2Bg(){
- const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#071a36');g.addColorStop(.55,'#08051d');g.addColorStop(1,'#02030c');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
- ctx.save();for(let i=0;i<100;i++){const x=(i*173.3)%W,y=(i*97.1+tm*(4+i%6*3))%H,a=.25+.45*Math.sin(tm*1.3+i);ctx.fillStyle='rgba(190,220,255,'+Math.max(.1,a)+')';ctx.fillRect(x,y,1+(i%3===0?1:0),1+(i%3===0?1:0))}
- const mx=W*.83,my=H*.25,mr=Math.min(W,H)*.17;const mg=ctx.createRadialGradient(mx-mr*.3,my-mr*.35,2,mx,my,mr);mg.addColorStop(0,'#fffde7');mg.addColorStop(.62,'#d7e3fc');mg.addColorStop(1,'#7890b5');ctx.fillStyle=mg;ctx.beginPath();ctx.arc(mx,my,mr,0,TAU);ctx.fill();ctx.fillStyle='rgba(20,35,62,.13)';for(let i=0;i<7;i++){const x=mx+Math.sin(i*12.7)*mr*.65,y=my+Math.cos(i*9.3)*mr*.62,r=mr*(.08+(i%3)*.035);ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill()}
- ctx.strokeStyle='rgba(130,190,255,.1)';ctx.lineWidth=2;for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(W*.3,H*1.1,(tm*18+i*H*.26)%(H*1.1)+H*.16,(tm*7+i*H*.12)%(H*.6)+H*.1,-.28,Math.PI,TAU);ctx.stroke()}ctx.restore()
-}
-function w2ExchangeCoins(){if((SV.coin||0)<W2COIN_STEP){msg='마나 0.1을 올리려면 코인 10,000개가 필요해요';msgT=2;return}SV.coin-=W2COIN_STEP;SV.mana=Math.round(((Number(SV.mana)||0)+W2MANA_STEP)*10)/10;save();snd('coin');msg='✨ 마나 +0.1 · 현재 '+SV.mana.toFixed(1);msgT=1.8}
-function w2UseStone(){if(!(SV.manaStone>0)){msg='마나석이 없어요 · 달 보스를 더 진행하면 얻을 수 있어요';msgT=2;return}SV.manaStone--;SV.mana=Math.round(((Number(SV.mana)||0)+1)*10)/10;save();snd('magic');msg='🔷 마나석 사용 · 마나 +1 (현재 '+SV.mana.toFixed(1)+')';msgT=2}
-function drawW2ManaPanel(){
- if(!w2ManaOpen)return;
- btns.length=0;btns.push({x:0,y:0,w:W,h:H,fn:()=>{w2ManaOpen=false}});
- ctx.fillStyle='rgba(0,0,8,.78)';ctx.fillRect(0,0,W,H);
- const pw=Math.min(W-32,420),ph=250,px=(W-pw)/2,py=(H-ph)/2;
- ctx.fillStyle='#101d38';ctx.strokeStyle='#80deea';ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(px,py,pw,ph,18);ctx.fill();ctx.stroke();
- txt('✨ 마나 업그레이드',W/2,py+34,21,'#d6e7ff');
- const mana=Number(SV.mana)||0,scale=w2ManaScale();
- txt('현재 마나 '+mana.toFixed(1)+'  ·  보유 마나석 '+(SV.manaStone||0)+'개',W/2,py+66,14,'#b3d5ff');
- txt('공격력 ×'+scale.toFixed(2)+'  ·  방어력 ×'+scale.toFixed(2),W/2,py+91,14,'#ffe082');
- txt('코인 10,000개 → 마나 +0.1',W/2,py+119,12,'#b6a878');
- const gap=10,bw=(pw-44)/2,by=py+137;
- btn('💰 코인으로 +0.1',px+12,by,bw,40,w2ExchangeCoins,'#ffd54f',13);
- btn('🔷 마나석으로 +1',px+32+bw,by,bw,40,w2UseStone,'#80deea',13);
- btn('닫기',W/2-65,py+194,130,38,()=>{w2ManaOpen=false},'#9ab',14);
-}
-function drawW2(){
- w2Bg();btn('← 뒤로',16,8,96,40,()=>{S='title';msgT=0},'#9ab',14);coinUI();
- txt('🌌 2세계 · 우주의 경계',W/2,40,23,'#d6e7ff');txt('마나 '+(Number(SV.mana)||0).toFixed(1)+'  ·  공격 ×'+w2ManaScale().toFixed(2)+' / 방어 ×'+w2ManaScale().toFixed(2),W/2,68,14,'#b3d5ff','center',W-30);
- const rowW=Math.min(W-32,520),bw=(rowW-8)/2,bx=(W-rowW)/2;
- btn('✨ 마나 업그레이드',bx,82,bw,36,()=>{w2ManaOpen=true},'#80deea',14);
- btn('← 1세계',bx+bw+8,82,bw,36,()=>{SV.curW=1;save();S='title';msgT=0},'#b39ddb',13);
- if(W2st==='idle'||W2st==='loading'){txt('🌠 우주 지도를 불러오는 중…',W/2,H*.48,16,'#d6e7ff');if(W2st==='idle')w2Load();drawW2ManaPanel();return}
- if(W2st==='err'){txt('⚠ 2세계를 불러오지 못했어요',W/2,H*.38,17,'#ff8a80');txt(W2ERR,W/2,H*.38+26,12,'#e1bee7','center',W-40);btn('🔄 다시 시도',W/2-90,H*.38+52,180,40,()=>w2Load(true),'#b388ff',14);drawW2ManaPanel();return}
- btn('🛒 2세계 상점',W/2-176,130,168,38,()=>{SV.curW=2;shopTab='wep';S='shop';msgT=0},'#ffd54f',14);
- btn('📖 2세계 도감',W/2+8,130,168,38,()=>{codexIdx=0;S='codex';msgT=0},'#b3d5ff',14);
- const regions=W2.regions||[],w=Math.min(W-32,760),cols=w>=560?3:2,gap=10,cw=(w-gap*(cols-1))/cols,ch=Math.max(86,Math.min(126,(H-202)/Math.ceil(regions.length/cols))),x0=(W-w)/2,y0=178;
- if(w2Sel>=0&&regions[w2Sel]){
-  const r=regions[w2Sel],ids=w2RegionBosses(r.id);btn('← 지역 목록',16,48,120,34,()=>{w2Sel=-1;msgT=0},'#9ab',13);txt((r.ic||'🌙')+' '+r.n+' · 달의 보스',W/2,70,19,r.c||'#c5d8ff');
-  if(!ids.length){txt(r.lock||'아직 탐험할 수 없어요',W/2,H*.48,14,'#aab');drawW2ManaPanel();return}
-  const totalH=Math.max(1,H-126),rh=Math.min(74,totalH/ids.length),listY=98;
-  ids.forEach((id,j)=>{const b=BOSSES[id],y=listY+j*rh,open=w2BossOpen(id),done=w2Done(b.w2Id),bw=Math.min(W-36,680),x=(W-bw)/2;btns.push({x,y,w:bw,h:rh-6,fn:()=>{if(!open){msg='🔒 앞의 달 보스를 먼저 이겨야 해요';msgT=1.8;return}if((Number(SV.mana)||0)<W2MIN_MANA){msg='마나가 10 이상이어야 보스전에 입장할 수 있어요';msgT=2.2;return}startFight(id)}});
-   ctx.fillStyle=done?'rgba(127,255,178,.1)':open?'rgba(110,170,255,.12)':'rgba(0,0,0,.32)';ctx.strokeStyle=done?'#7fffb2':open?(b.c||'#8fc8ff'):'#445';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x,y,bw,rh-6,12);ctx.fill();ctx.stroke();drawBoss(x+32,y+(rh-6)/2,Math.min(20,(rh-12)*.28),id,0,1);txt((done?'✔ ':open?'':'🔒 ')+b.n,x+60,y+22,14,done?'#7fffb2':open?(b.c||'#dceaff'):'#889','left',bw-150);txt('HP '+b.hp.toLocaleString()+' · 승리 보상 장비',x+60,y+42,11,'#b2c7df','left');txt(done?'클리어':open?'도전':'잠김',x+bw-18,y+rh/2,12,done?'#7fffb2':open?'#ffe082':'#667','right')
-  });drawW2ManaPanel();return
- }
- regions.forEach((r,i)=>{const x=x0+(i%cols)*(cw+gap),y=y0+Math.floor(i/cols)*(ch+gap),open=w2RegionOpen(i),ids=w2RegionBosses(r.id),done=ids.filter(id=>w2Done(BOSSES[id].w2Id)).length;btns.push({x,y,w:cw,h:ch,fn:()=>{if(!open){msg='🔒 '+(r.lock||'이 지역은 아직 잠겨 있어요');msgT=2;return}w2Sel=i;msgT=0}});
-  ctx.fillStyle=open?(PR&&PR.x===x&&PR.y===y?'rgba(190,220,255,.24)':'rgba(115,170,255,.11)'):'rgba(255,255,255,.035)';ctx.strokeStyle=open?(r.c||'#9ecbff'):'rgba(150,170,200,.25)';ctx.lineWidth=open?2.5:1.5;ctx.beginPath();ctx.roundRect(x,y,cw,ch,14);ctx.fill();ctx.stroke();txt(r.ic||'🪐',x+cw/2,y+ch*.36,Math.min(32,ch*.3),'#fff');txt(r.n||'???',x+cw/2,y+ch*.65,14,open?(r.c||'#d6e7ff'):'#778','center',cw-16);txt(open?(ids.length?done+' / '+ids.length+' 클리어':'탐사 준비 중'):'🔒 '+(r.lock||'잠김'),x+cw/2,y+ch*.65+18,10,open?'#aabbd2':'#667','center',cw-12)});
- drawW2ManaPanel();
- if(msgT>0){ctx.globalAlpha=Math.min(1,msgT*2);ctx.fillStyle='rgba(0,0,0,.8)';ctx.beginPath();ctx.roundRect(W/2-210,H-48,420,30,15);ctx.fill();txt(msg,W/2,H-28,12,'#ffe082','center',400);ctx.globalAlpha=1}
-}
-const itemListBase=itemList;
-itemList=function(title,col,keys,act,tb){
- const isShop=title==='상점',world2=isShop&&W2ON();
- if(isShop){keys=keys.filter(k=>world2?!!(WEP[k]&&WEP[k].w2shop&&WEP[k].p>0):WEP[k]?WEP[k].p>0&&!WEP[k].w2shop:!!(GEAR[k]&&GEAR[k].p>0));if(world2){title='🌌 2세계 상점';tb=null}}
- const n=btns.length;itemListBase(title,col,keys,act,tb);
- if(isShop){for(let i=n;i<btns.length;i++)if(btns[i].l==='← 뒤로')btns[i].fn=()=>{S=world2?'w2':'title';msgT=0}}
-};
-const startFightBase=startFight;
-startFight=function(i){
- const b=BOSSES[i];
- if(b&&b.w2){
-  if((Number(SV.mana)||0)<W2MIN_MANA){msg='마나가 10 이상이어야 2세계 보스전에 입장할 수 있어요';msgT=2;snd('hurt');return}
-  if(!w2BossOpen(i)){msg='앞의 달 보스를 먼저 이겨야 해요';msgT=1.8;snd('hurt');return}
-  SV.curW=2;save()
- }
- startFightBase(i)
-};
-const hitBossBase=hitBoss;
-hitBoss=function(base,ang,stop,el){
- const b=w2CurrentBoss();
- if(b){const scaled=base*1000*w2ManaScale();base=Math.max(B.max*.01,scaled)}
- return hitBossBase(base,ang,stop,el)
-};
-const hurtBase=hurt;
-hurt=function(d){
- if(w2CurrentBoss())d=d/w2ManaScale();
- return hurtBase(d)
-};
-const petHitBase=petHit;
-petHit=function(tg,dm){
- if(w2CurrentBoss())dm=Math.max(B.max*.01,dm*1000*w2ManaScale());
- return petHitBase(tg,dm)
-};
-setInterval(()=>{
- if(SV&&SV.w2&&(SV.curW===2||SV.own.some(k=>WEP[k]&&WEP[k].w2Item||GEAR[k]&&GEAR[k].w2Item))&&W2st==='idle')w2Load();
- const b=w2CurrentBoss();
- if(S==='win'&&b&&W2WIN_ID!==b.w2Id){
-  W2WIN_ID=b.w2Id;SV.w2clr=SV.w2clr||[];
-  if(!w2Done(b.w2Id)){
-   SV.w2clr.push(b.w2Id);
-   if(b.reward&&itm(b.reward)){if(!SV.own.includes(b.reward))SV.own.push(b.reward);rewGot=b.reward;const it=itm(b.reward);if(WEP[b.reward]&&SV.eq==='fist')SV.eq=b.reward;else if(GEAR[b.reward]&&!SV.gear[GEAR[b.reward].cat])SV.gear[GEAR[b.reward].cat]=b.reward;msg='🎁 '+it.n+' 획득!';msgT=2.5}
-   if(b.manaStoneReward){SV.manaStone=(SV.manaStone||0)+b.manaStoneReward;msg='🔷 마나석 +'+b.manaStoneReward+' · 보유 '+SV.manaStone+'개';msgT=2.5}
-   save()
-  }
- }
- if((S==='win'||S==='lose')&&w2CurrentBoss())for(const bt of btns)if(bt.l==='보스 선택')bt.fn=()=>{S='w2';w2Sel=-1;msgT=0}
-},50);
-if(SV&&(SV.w2||SV.curW===2))w2Load();
 </script></body></html>
