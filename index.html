@@ -1556,10 +1556,34 @@ function btn(l,x,y,w,h,fn,c='#5ef',fs=20){btns.push({x,y,w,h,fn,l});ctx.fillStyl
 function poly(n,r,rot,fill){ctx.beginPath();for(let i=0;i<=n;i++){const a=rot+i*TAU/n;ctx[i?'lineTo':'moveTo'](Math.cos(a)*r,Math.sin(a)*r)}fill?ctx.fill():ctx.stroke()}
 // ===== ✨ 보스 그리기: 원래 모양을 따로 그린 뒤 입체감(광택·음영)·외곽 빛·숨쉬기를 더해요 =====
 const BOC=document.createElement('canvas'),BOX=BOC.getContext('2d');
+// ===== ✏ 보스 그림체: 각지고 만화 느낌 (큰 원 → 다각형, 굵은 외곽선, 2단 셀 음영) =====
+const BANG=(()=>{const X=BOX,T=document.createElement('canvas'),TX=T.getContext('2d');X.__angR=1e9;let cx=0,cy=0,sx=0,sy=0;
+ const oA=X.arc.bind(X),oE=X.ellipse.bind(X),oM=X.moveTo.bind(X),oL=X.lineTo.bind(X),oQ=X.quadraticCurveTo.bind(X),oB=X.bezierCurveTo.bind(X),oC=X.closePath.bind(X),oBP=X.beginPath.bind(X);
+ const poly=(x,y,rx,ry,rot,a0,a1,ccw)=>{let sw=a1-a0;if(ccw){sw=a0-a1;if(sw<=0)sw+=TAU;sw=-Math.min(sw,TAU)}else{if(sw<=0&&a1!==a0)sw+=TAU;sw=Math.min(sw,TAU)}
+  const n=Math.max(2,Math.round(Math.abs(sw)/TAU*(Math.max(rx,ry)>X.__angR*2.5?11:9))),cr=Math.cos(rot),sr=Math.sin(rot);
+  for(let j=0;j<=n;j++){const a=a0+sw*j/n,px=Math.cos(a)*rx,py=Math.sin(a)*ry,qx=x+px*cr-py*sr,qy=y+px*sr+py*cr;oL(qx,qy);cx=qx;cy=qy}};
+ X.beginPath=function(){oBP();cx=cy=sx=sy=0;this.__np=1;this.__sm=0;this.__ec=[]};
+ X.moveTo=function(x,y){oM(x,y);cx=sx=x;cy=sy=y;this.__np=0};
+ X.lineTo=function(x,y){oL(x,y);cx=x;cy=y;this.__np=0;this.__sm=2};
+ X.closePath=function(){oC();cx=sx;cy=sy};
+ const oF=X.fill.bind(X),isRed=v=>{let m=/^#([0-9a-f]{6})$/i.exec(v),R,G,Bc;if(m){const n=parseInt(m[1],16);R=n>>16;G=n>>8&255;Bc=n&255}else{m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(v);if(!m)return 0;R=+m[1];G=+m[2];Bc=+m[3]}return R>190&&G<120&&Bc<120};
+ X.fill=function(){if(this.__sm===1&&this.__angR<1e8&&typeof this.fillStyle==='string'&&isRed(this.fillStyle)){const f=this.fillStyle,sc=this.shadowColor;this.fillStyle='#ffd54a';if(isRed(sc))this.shadowColor='rgba(255,213,74,.8)';oF(...arguments);const L=this.__ec||[],sb=this.shadowBlur;this.shadowBlur=0;this.fillStyle='#2a1830';for(const e of L){oBP();oA(e[0],e[1]+e[2]*.1,e[2]*.5,0,TAU);oF()}oBP();this.shadowBlur=sb;this.fillStyle=f;this.shadowColor=sc;return}oF(...arguments)};
+ X.arc=function(x,y,r,a0,a1,ccw){if(r<this.__angR*1.4&&this.__sm!==2){this.__sm=1;(this.__ec=this.__ec||[]).push([x,y,r])}else this.__sm=2;if(r<this.__angR||!(r>0))return oA(x,y,r,a0,a1,ccw);if(this.__np){const p=x+Math.cos(a0)*r,q=y+Math.sin(a0)*r;oM(p,q);sx=p;sy=q;this.__np=0}poly(x,y,r,r,0,a0,a1,ccw)};
+ X.ellipse=function(x,y,rx,ry,rot,a0,a1,ccw){this.__sm=Math.max(rx,ry)<this.__angR*1.4&&this.__sm!==2?1:2;if(Math.max(rx,ry)<this.__angR||!(rx>0&&ry>0))return oE(x,y,rx,ry,rot,a0,a1,ccw);if(this.__np){const c=Math.cos(rot),s=Math.sin(rot),px=Math.cos(a0)*rx,py=Math.sin(a0)*ry,p=x+px*c-py*s,q=y+px*s+py*c;oM(p,q);sx=p;sy=q;this.__np=0}poly(x,y,rx,ry,rot,a0,a1,ccw)};
+ X.quadraticCurveTo=function(qx,qy,x,y){if(Math.hypot(x-cx,y-cy)<this.__angR*1.2){oQ(qx,qy,x,y);cx=x;cy=y;return}oL((cx+2*qx+x)/4,(cy+2*qy+y)/4);oL(x,y);cx=x;cy=y};
+ X.bezierCurveTo=function(a,b,c,d,x,y){if(Math.hypot(x-cx,y-cy)<this.__angR*1.2){oB(a,b,c,d,x,y);cx=x;cy=y;return}oL((cx+3*a)/4,(cy+3*b)/4);oL((3*c+x)/4,(3*d+y)/4);oL(x,y);cx=x;cy=y};
+ function cel(S,br,k,c){X.save();X.globalCompositeOperation='source-atop';const o=S/2;
+  X.fillStyle='rgba(255,255,255,.22)';X.beginPath();X.moveTo(0,0);X.lineTo(S,0);X.lineTo(S,o-br*.55);X.lineTo(o+br*.15,o-br*.2);X.lineTo(0,o+br*.25);X.closePath();X.fill();
+  X.fillStyle='rgba(255,255,255,.32)';X.beginPath();X.moveTo(o-br*.75,o-br*.35);X.lineTo(o-br*.45,o-br*.75);X.lineTo(o-br*.25,o-br*.68);X.lineTo(o-br*.58,o-br*.22);X.closePath();X.fill();
+  X.fillStyle='rgba(20,10,40,.26)';X.beginPath();X.moveTo(S,S);X.lineTo(0,S);X.lineTo(0,o+br*.85);X.lineTo(o-br*.1,o+br*.5);X.lineTo(S,o+br*.15);X.closePath();X.fill();X.restore()}
+ function line(S,br,k,px){if(T.width<px+4||T.height<px+4){T.width=T.height=Math.max(px+4,T.width)}TX.setTransform(1,0,0,1,0,0);TX.clearRect(0,0,T.width,T.height);TX.globalCompositeOperation='source-over';TX.drawImage(BOC,0,0,px,px,0,0,px,px);TX.globalCompositeOperation='source-in';TX.fillStyle='#17122b';TX.fillRect(0,0,px,px);TX.globalCompositeOperation='source-over';
+  const w=Math.max(1.2,br*.075)*k;X.save();X.setTransform(1,0,0,1,0,0);X.globalCompositeOperation='destination-over';for(let j=0;j<12;j++){const a=j/12*TAU;X.drawImage(T,0,0,px,px,Math.cos(a)*w,Math.sin(a)*w,px,px)}X.restore()}
+ return{cel,line}})();
 function drawBoss(x,y,r,i,hit,al){const d=BOSSES[i];if(!d||r<=0)return;const big=r>=24,br=r*(1+Math.sin(tm*2.2+i)*.025),S=br*4.2,k=Math.min(3,Math.max(1,(devicePixelRatio||1)*Z)),px=Math.ceil(S*k);
  if(BOC.width<px||BOC.height<px){BOC.width=BOC.height=Math.max(px,BOC.width)}BOX.setTransform(1,0,0,1,0,0);BOX.clearRect(0,0,px+2,px+2);BOX.setTransform(k,0,0,k,0,0);BOX.globalAlpha=1;BOX.globalCompositeOperation='source-over';
- drawBoss0(S/2,S/2,br,i,hit,1,BOX);
- if(!hit){BOX.globalCompositeOperation='source-atop';const g=BOX.createRadialGradient(S/2-br*.45,S/2-br*.6,br*.1,S/2,S/2,br*1.5);g.addColorStop(0,'rgba(255,255,255,.38)');g.addColorStop(.45,'rgba(255,255,255,.06)');g.addColorStop(.75,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.32)');BOX.fillStyle=g;BOX.fillRect(0,0,S,S);BOX.globalCompositeOperation='source-over'}
+ BOX.__angR=SV.angOff?1e9:br*.2;drawBoss0(S/2,S/2,br,i,hit,1,BOX);BOX.__angR=1e9;
+ if(!hit&&!SV.angOff){BANG.cel(S,br,k,d.c)}else if(!hit){BOX.globalCompositeOperation='source-atop';const g=BOX.createRadialGradient(S/2-br*.45,S/2-br*.6,br*.1,S/2,S/2,br*1.5);g.addColorStop(0,'rgba(255,255,255,.38)');g.addColorStop(.45,'rgba(255,255,255,.06)');g.addColorStop(.75,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.32)');BOX.fillStyle=g;BOX.fillRect(0,0,S,S);BOX.globalCompositeOperation='source-over'}
+ if(!SV.angOff&&big)BANG.line(S,br,k,px);
  ctx.save();ctx.globalAlpha=al;
  if(big&&al>.3){const rg=B&&i===cur&&MODE==='boss'&&B.rage,ag=ctx.createRadialGradient(x,y,br*.6,x,y,br*1.9),pl=.5+.5*Math.sin(tm*(rg?8:3));ag.addColorStop(0,(rg?'#ff3d6e':d.c)+(rg?'55':'30'));ag.addColorStop(1,(rg?'#ff3d6e':d.c)+'00');ctx.fillStyle=ag;ctx.globalAlpha=al*(.6+.4*pl);ctx.beginPath();ctx.arc(x,y,br*1.9,0,TAU);ctx.fill();ctx.globalAlpha=al}
  ctx.drawImage(BOC,0,0,px,px,x-S/2,y-S/2,S,S);ctx.restore()}
@@ -6246,7 +6270,7 @@ ACH.push(
  {id:'transfast',ic:'☯',n:'경계를 넘는 속도',d:'무와 유의 경계 보스를 1분 안에 처치',g:()=>[SV.cnt.transFast?1:0,1],r:{coin:40000}});
 
 // ===== 🚀 공개 준비: 튼튼하게 · 새 유저 편의 · 욕설 필터 · 관리자 구멍 막기 · 유저 관리 =====
-const GAME_VER='2026.11.15.5';
+const GAME_VER='2026.11.16';
 // --- 🛡 오류 자동 복구
 let ERRLOG=[],ERRW=[],ERRT=0;
 function errHit(e){try{const m=String(e&&(e.stack||e.message)||e).slice(0,300);ERRLOG.push({t:Date.now(),m,s:S});if(ERRLOG.length>20)ERRLOG.shift();const now=performance.now();ERRW=ERRW.filter(t=>now-t<3000);ERRW.push(now);if(ERRW.length>40){ERRW=[];errRecover()}else if(now-ERRT>8000){ERRT=now;msg='⚠ 작은 오류가 났지만 계속 진행돼요';msgT=1.6}}catch(_){}}
@@ -6285,7 +6309,7 @@ let ADMSUB=null;async function admLoad(){if(!ONL()||!MK)return;if(!ADMSUB){try{A
 const onAdm=()=>isAdm()&&!!MKID&&ADMU.includes(MKID);
 // 🔐 관리자 보안: 비밀번호 X → 서버 관리자 목록(config/admins)에 있는 기기만 관리자 모드
 let ADMBUSY=false,ADMNV=0;
-const ADM_OPEN=true;// 🔓 지금은 누구나 관리자 모드 (서버 확인 끔) · 다시 잠그려면 false
+const ADM_OPEN=false;// 🔐 서버 관리자 목록(config/admins)에 있는 기기만 관리자 · 열려면 true
 async function admTry(er,close){if(ADMBUSY)return;if(ADM_OPEN){SV.admin=true;try{admGrant()}catch(_){}if(SV.afb===undefined)SV.afb=true;save();if(close)close();msg='👑 관리자 모드 활성화!';msgT=1.6;return}const E=t=>{if(er)er.textContent=t};if(!ONL()||!MKID){E('온라인에 연결돼야 확인할 수 있어요');return}ADMBUSY=true;E('서버에서 확인하는 중…');
  try{await admLoad();if(!ADMU.includes(MKID)){{E('');if(er)er.style.height='auto';if(er)er.innerHTML='❌ 관리자 기기가 아니에요<br><span style="color:#9ab;font-size:11px;user-select:text;-webkit-user-select:text">기기 ID: '+String(MKID).replace(/[<>&"]/g,'')+'</span>';ADMBUSY=false;return}}
   SV.admin=true;try{admGrant()}catch(_){}if(SV.afb===undefined)SV.afb=true;ADMNV=0;save();if(close)close();msg='👑 관리자 모드 활성화! (서버 확인됨)';msgT=1.8}catch(e){E('확인 실패: '+(e&&e.code||'서버 오류'))}ADMBUSY=false}
